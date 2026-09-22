@@ -1,0 +1,1 @@
+export { AdminShell, default as AdminShellDefault } from "./AdminShell";

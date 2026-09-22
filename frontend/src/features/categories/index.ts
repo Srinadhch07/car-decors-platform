@@ -1,0 +1,1 @@
+export { CategoryDetail } from "./CategoryDetail";
