@@ -35,24 +35,24 @@ interface ColorFieldProps {
 function ColorField({ label, value, onChange }: ColorFieldProps) {
   const safeValue = normalizeHex(value) ?? DEFAULT_THEME.primary;
   return (
-    <div className="flex items-center gap-3">
-      <label className="w-40 shrink-0 text-sm font-medium text-text-primary">{label}</label>
-      <input
-        type="color"
-        aria-label={`${label} color picker`}
-        className="h-9 w-12 cursor-pointer rounded-md border border-border bg-white p-1"
-        value={safeValue}
-        onChange={(e) => onChange(e.target.value)}
-      />
-      <input
-        type="text"
-        aria-label={`${label} hex code`}
-        className={`${inputClass} w-28`}
-        value={value}
-        spellCheck={false}
-        onChange={(e) => onChange(e.target.value)}
-      />
-    </div>
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+        <label className="w-40 shrink-0 text-sm font-medium text-text-primary">{label}</label>
+        <input
+          type="color"
+          aria-label={`${label} color picker`}
+          className="h-9 w-12 shrink-0 cursor-pointer rounded-md border border-border bg-white p-1"
+          value={safeValue}
+          onChange={(e) => onChange(e.target.value)}
+        />
+        <input
+          type="text"
+          aria-label={`${label} hex code`}
+          className={`${inputClass} w-28 min-w-0`}
+          value={value}
+          spellCheck={false}
+          onChange={(e) => onChange(e.target.value)}
+        />
+      </div>
   );
 }
 
