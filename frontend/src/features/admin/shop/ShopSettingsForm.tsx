@@ -1,6 +1,12 @@
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
-import type { ShopSettings, ShopSettingsUpdatePayload } from "../../../types/api";
+import { sanitizeTheme } from "../../../lib/theme";
+import type {
+  ShopSettings,
+  ShopSettingsUpdatePayload,
+  ThemeColors,
+} from "../../../types/api";
+import { ThemeEditor } from "./ThemeEditor";
 
 export const SOCIAL_LINK_KEYS = [
   "instagram",
@@ -33,6 +39,7 @@ interface FormValues {
   business_hours: string;
   logo_url: string;
   social_links: Record<string, string>;
+  theme: ThemeColors;
 }
 
 function valuesFromSettings(s: ShopSettings): FormValues {
@@ -47,6 +54,7 @@ function valuesFromSettings(s: ShopSettings): FormValues {
     social_links: Object.fromEntries(
       SOCIAL_LINK_KEYS.map((key) => [key, s.social_links[key] ?? ""]),
     ),
+    theme: sanitizeTheme(s.theme),
   };
 }
 
@@ -64,6 +72,7 @@ function buildPayload(v: FormValues): ShopSettingsUpdatePayload {
     address: v.address.trim(),
     business_hours: v.business_hours.trim().length > 0 ? v.business_hours.trim() : null,
     logo_url: v.logo_url.trim().length > 0 ? v.logo_url.trim() : null,
+    theme: sanitizeTheme(v.theme),
   };
   if (Object.keys(social).length > 0) {
     payload.social_links = social;
@@ -143,6 +152,10 @@ export function ShopSettingsForm({ initial, saving, error, onSave }: ShopSetting
 
   function setSocialLink(key: string, value: string) {
     setValues((v) => ({ ...v, social_links: { ...v.social_links, [key]: value } }));
+  }
+
+  function resetTheme() {
+    setValues((v) => ({ ...v, theme: sanitizeTheme(initial.theme) }));
   }
 
   function handleSubmit(e: FormEvent<HTMLFormElement>) {
@@ -231,6 +244,24 @@ export function ShopSettingsForm({ initial, saving, error, onSave }: ShopSetting
             />
           ))}
         </div>
+      </section>
+
+      <section className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-base font-semibold text-text-primary">Website theme</h2>
+          <button
+            type="button"
+            onClick={resetTheme}
+            className="text-sm font-medium text-orange-600 hover:text-orange-700"
+          >
+            Reset colors
+          </button>
+        </div>
+        <p className="text-sm text-text-secondary">
+          Preview changes here and save with the button below; the customer website
+          updates immediately after you save.
+        </p>
+        <ThemeEditor value={values.theme} onChange={(theme) => setField("theme", theme)} />
       </section>
 
       {error && (

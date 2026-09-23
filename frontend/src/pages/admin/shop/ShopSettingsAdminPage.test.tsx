@@ -4,6 +4,7 @@ import { delay, http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import { TestWrapper } from "../../../test-utils";
+import { DEFAULT_THEME } from "../../../lib/theme";
 import type { ShopSettings, ShopSettingsUpdatePayload } from "../../../types/api";
 import ShopSettingsAdminPage from "./ShopSettingsAdminPage";
 
@@ -19,6 +20,7 @@ const shopSettings: ShopSettings = {
     facebook: "https://facebook.com/slg",
   },
   logo_url: null,
+  theme: { ...DEFAULT_THEME },
 };
 
 let failShop = false;
@@ -46,6 +48,7 @@ const server = setupServer(
       business_hours: putBody.business_hours ?? null,
       logo_url: putBody.logo_url ?? null,
       social_links: putBody.social_links ?? shopSettings.social_links,
+      theme: putBody.theme ?? shopSettings.theme,
     };
     return HttpResponse.json(updated);
   }),
@@ -137,6 +140,7 @@ describe("ShopSettingsAdminPage", () => {
       business_hours: shopSettings.business_hours,
       logo_url: null,
       social_links: shopSettings.social_links,
+      theme: DEFAULT_THEME,
     });
   });
 
@@ -159,7 +163,7 @@ describe("ShopSettingsAdminPage", () => {
     renderPage();
     await screen.findByDisplayValue(shopSettings.shop_name);
 
-    await user.type(screen.getByLabelText(/Website/i), "https://example.com");
+    await user.type(screen.getByLabelText("Website", { exact: true }), "https://example.com");
     await user.click(screen.getByRole("button", { name: "Save changes" }));
 
     await screen.findByText("Shop settings saved.");
@@ -194,5 +198,34 @@ describe("ShopSettingsAdminPage", () => {
 
     expect(await screen.findByDisplayValue("Refreshed Name")).toBeInTheDocument();
     expect(putBody?.shop_name).toBe("Refreshed Name");
+  });
+
+  it("saves a chosen theme preset and custom color with the payload", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await screen.findByDisplayValue(shopSettings.shop_name);
+
+    await user.selectOptions(screen.getByLabelText("Website theme preset"), "racing-red");
+    const hex = screen.getByLabelText("Brand color hex code");
+    fireEvent.change(hex, { target: { value: "#E11D48" } });
+    await user.click(screen.getByRole("button", { name: "Save changes" }));
+
+    await screen.findByText("Shop settings saved.");
+    expect(putBody?.theme).toEqual(
+      expect.objectContaining({ preset: "racing-red", primary: "#E11D48" }),
+    );
+  });
+
+  it("reset colors restores the saved theme without saving", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await screen.findByDisplayValue(shopSettings.shop_name);
+
+    const hex = screen.getByLabelText("Brand color hex code");
+    fireEvent.change(hex, { target: { value: "#123456" } });
+    expect(hex).toHaveValue("#123456");
+
+    await user.click(screen.getByRole("button", { name: "Reset colors" }));
+    expect(screen.getByLabelText("Brand color hex code")).toHaveValue("#F97316");
   });
 });

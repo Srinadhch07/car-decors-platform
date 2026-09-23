@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { MemoryRouter } from "react-router-dom";
 import { ShopSettingsContext, type ShopSettingsState } from "./context/ShopSettingsContext";
+import { DEFAULT_THEME } from "./lib/theme";
 import type { ShopSettings } from "./types/api";
 
 export const mockShopSettings: ShopSettings = {
@@ -15,6 +16,7 @@ export const mockShopSettings: ShopSettings = {
     facebook: "https://facebook.com/slg",
   },
   logo_url: null,
+  theme: { ...DEFAULT_THEME },
 };
 
 export function createMockState(
@@ -24,6 +26,7 @@ export function createMockState(
     data: mockShopSettings,
     loading: false,
     error: null,
+    theme: mockShopSettings.theme ?? null,
     ...overrides,
   };
 }

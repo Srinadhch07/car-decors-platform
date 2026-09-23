@@ -2,7 +2,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
-import { TestWrapper, mockShopSettings } from "../../test-utils";
+import { TestWrapper, createMockState, mockShopSettings } from "../../test-utils";
 import type { Category, Product } from "../../types/api";
 import { ProductDetail } from "./ProductDetail";
 
@@ -201,11 +201,9 @@ describe("ProductDetail", () => {
         wrapper: ({ children }) => (
           <TestWrapper
             initialEntries={["/products/premium-leather-seat-cover"]}
-            shopState={{
+            shopState={createMockState({
               data: { ...mockShopSettings, whatsapp_number: "" },
-              loading: false,
-              error: null,
-            }}
+            })}
           >
             {children}
           </TestWrapper>

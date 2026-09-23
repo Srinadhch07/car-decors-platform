@@ -1,5 +1,7 @@
 """Shop settings document, public read schema, and admin update schema."""
 
+import re
+
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 from app.core.validation import validate_url_or_path
@@ -14,6 +16,70 @@ _MAX_CONTACT_LENGTH = 40
 _MAX_FREE_TEXT_LENGTH = 500
 _MAX_LINK_LENGTH = 500
 
+#: Strict 6-digit hex so user-supplied colors can never smuggle arbitrary CSS
+#: (``url(...)``, ``javascript:``, expressions, selectors) into the website.
+_HEX_COLOR_PATTERN = re.compile(r"^#[0-9a-fA-F]{6}$")
+_PRESET_PATTERN = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+
+#: The default website theme (a.k.a. the "Automotive Orange" preset). These
+#: values intentionally mirror the original static palette so the shop looks
+#: identical until an admin explicitly saves a new theme.
+DEFAULT_THEME_VALUES = {
+    "preset": "automotive-orange",
+    "primary": "#F97316",  # brand orange (was --color-orange-500)
+    "secondary": "#111111",  # dark surfaces (was --color-dark-900)
+    "accent": "#FFFFFF",  # contrast text on brand/dark surfaces
+    "background": "#FFFFFF",  # main page background (was --color-surface)
+    "foreground": "#1A1A1A",  # body text (was --color-text-primary)
+    "muted": "#525252",  # secondary text (was --color-text-secondary)
+    "border": "#D4D4D4",  # dividers (was --color-border)
+}
+
+
+class Theme(BaseModel):
+    """Website color/theme values managed through Shop Settings.
+
+    Colors are validated as strict 6-digit hex, so only safe color strings can
+    ever reach the public website.
+    """
+
+    preset: str = DEFAULT_THEME_VALUES["preset"]
+    primary: str = DEFAULT_THEME_VALUES["primary"]
+    secondary: str = DEFAULT_THEME_VALUES["secondary"]
+    accent: str = DEFAULT_THEME_VALUES["accent"]
+    background: str = DEFAULT_THEME_VALUES["background"]
+    foreground: str = DEFAULT_THEME_VALUES["foreground"]
+    muted: str = DEFAULT_THEME_VALUES["muted"]
+    border: str = DEFAULT_THEME_VALUES["border"]
+
+    @field_validator("preset")
+    @classmethod
+    def _validate_preset(cls, value: str) -> str:
+        normalized = value.strip()
+        if not _PRESET_PATTERN.fullmatch(normalized) or len(normalized) > 50:
+            raise ValueError("preset must be a lowercase slug like automotive-orange")
+        return normalized
+
+    @field_validator(
+        "primary",
+        "secondary",
+        "accent",
+        "background",
+        "foreground",
+        "muted",
+        "border",
+    )
+    @classmethod
+    def _validate_hex_color(cls, value: str) -> str:
+        if not _HEX_COLOR_PATTERN.fullmatch(value):
+            raise ValueError("must be a 6-digit hex color like #Ea580c")
+        return value.upper()
+
+
+def default_theme() -> Theme:
+    """Return a fresh copy of the default website theme."""
+    return Theme()
+
 
 class ShopSettings(BaseDocument):
     """Business information for the (single) shop."""
@@ -26,6 +92,7 @@ class ShopSettings(BaseDocument):
     business_hours: str | None = None
     social_links: dict[str, str] = Field(default_factory=dict)
     logo_url: str | None = None
+    theme: Theme = Field(default_factory=default_theme)
 
 
 class ShopSettingsPublic(BaseModel):
@@ -41,6 +108,7 @@ class ShopSettingsPublic(BaseModel):
     business_hours: str | None = None
     social_links: dict[str, str] = Field(default_factory=dict)
     logo_url: str | None = None
+    theme: Theme = Field(default_factory=default_theme)
 
 
 def _validate_url_value(value: str, *, allow_relative: bool) -> str:
@@ -63,6 +131,7 @@ class ShopSettingsUpdate(BaseModel):
     business_hours: str | None = Field(default=None, max_length=_MAX_FREE_TEXT_LENGTH)
     social_links: dict[str, str] | None = None
     logo_url: str | None = Field(default=None, max_length=_MAX_LINK_LENGTH)
+    theme: Theme | None = None
 
     @field_validator("shop_name", mode="before")
     @classmethod

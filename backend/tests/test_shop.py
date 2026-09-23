@@ -5,7 +5,7 @@ from httpx import AsyncClient
 
 from app.core.config import get_settings
 from app.models.shop_settings import ShopSettings
-from app.repositories.shop_settings import ShopSettingsRepository
+from app.repositories.shop_settings import SHOP_SETTINGS_ID, ShopSettingsRepository
 from app.seed import seed_shop_settings
 from tests.support.mongomock_async import AsyncDatabase
 
@@ -24,6 +24,19 @@ PUBLIC_FIELDS = {
     "business_hours",
     "social_links",
     "logo_url",
+    "theme",
+}
+
+#: Mirrors the backend default theme (colors normalize to uppercase).
+DEFAULT_THEME = {
+    "preset": "automotive-orange",
+    "primary": "#F97316",
+    "secondary": "#111111",
+    "accent": "#FFFFFF",
+    "background": "#FFFFFF",
+    "foreground": "#1A1A1A",
+    "muted": "#525252",
+    "border": "#D4D4D4",
 }
 
 
@@ -101,6 +114,7 @@ async def test_admin_get_shop_returns_current_settings(
         "business_hours": None,
         "social_links": {},
         "logo_url": None,
+        "theme": DEFAULT_THEME,
     }
 
 
@@ -248,6 +262,16 @@ async def test_admin_put_requires_csrf_token(
         ({"logo_url": "https://"}, "value_error"),
         ({"logo_url": "not a url"}, "value_error"),
         ({"shop_name": "x" * 201}, "max_length"),
+        ({"theme": {"primary": "#12345"}}, "hex color"),
+        ({"theme": {"primary": "red"}}, "hex color"),
+        ({"theme": {"primary": "#GGGGGG"}}, "hex color"),
+        ({"theme": {"background": "#FFF"}}, "hex color"),
+        ({"theme": {"primary": "url(https://evil.example/x.css)"}}, "hex color"),
+        ({"theme": {"primary": "javascript:alert(1)"}}, "hex color"),
+        ({"theme": {"primary": "<script>alert(1)</script>"}}, "hex color"),
+        ({"theme": {"muted": "expression(alert(1))"}}, "hex color"),
+        ({"theme": {"preset": "Automotive Orange!"}}, "preset"),
+        ({"theme": {"preset": "<script>alert(1)</script>"}}, "preset"),
     ],
 )
 async def test_validation_rejects_malformed_input(
@@ -271,3 +295,112 @@ async def test_empty_update_is_a_noop(auth_client: AsyncClient, fake_db, seeded_
     assert response.status_code == 200
     assert response.json()["shop_name"] == "Car Decor Shop"
     assert await ShopSettingsRepository(fake_db).count() == 1
+
+
+async def test_public_shop_exposes_default_theme(auth_client: AsyncClient, fake_db) -> None:
+    await _seed_default_shop(fake_db)
+
+    response = await auth_client.get(SHOP_URL)
+
+    assert response.status_code == 200
+    assert response.json()["theme"] == DEFAULT_THEME
+
+
+async def test_admin_put_updates_theme(auth_client: AsyncClient, fake_db, seeded_admin) -> None:
+    await _seed_default_shop(fake_db)
+    headers = await _login(auth_client)
+    theme = {
+        "preset": "racing-red",
+        "primary": "#DC2626",
+        "secondary": "#0A0A0A",
+        "accent": "#FFFFFF",
+        "background": "#FAFAFA",
+        "foreground": "#1C1917",
+        "muted": "#6B7280",
+        "border": "#E5E7EB",
+    }
+
+    response = await auth_client.put(ADMIN_SHOP_URL, headers=headers, json={"theme": theme})
+
+    assert response.status_code == 200
+    assert response.json()["theme"] == theme
+
+    public = await auth_client.get(SHOP_URL)
+    assert public.status_code == 200
+    assert public.json()["theme"] == theme
+
+
+async def test_admin_put_theme_persists_in_store(
+    auth_client: AsyncClient, fake_db, seeded_admin
+) -> None:
+    await _seed_default_shop(fake_db)
+    headers = await _login(auth_client)
+
+    await auth_client.put(
+        ADMIN_SHOP_URL,
+        headers=headers,
+        json={"theme": {"preset": "electric-blue", "primary": "#2563EB"}},
+    )
+
+    stored = await ShopSettingsRepository(fake_db).get()
+    assert stored.theme.preset == "electric-blue"
+    assert stored.theme.primary == "#2563EB"
+
+
+async def test_partial_update_preserves_existing_theme(
+    auth_client: AsyncClient, fake_db, seeded_admin
+) -> None:
+    await _seed_default_shop(fake_db)
+    headers = await _login(auth_client)
+
+    response = await auth_client.put(ADMIN_SHOP_URL, headers=headers, json={"shop_name": "Renamed"})
+
+    assert response.status_code == 200
+    assert response.json()["theme"] == DEFAULT_THEME
+
+
+async def test_explicit_null_theme_is_ignored(
+    auth_client: AsyncClient, fake_db, seeded_admin
+) -> None:
+    await _seed_default_shop(fake_db)
+    headers = await _login(auth_client)
+
+    response = await auth_client.put(ADMIN_SHOP_URL, headers=headers, json={"theme": None})
+
+    assert response.status_code == 200
+    assert response.json()["theme"] == DEFAULT_THEME
+    stored = await ShopSettingsRepository(fake_db).get()
+    assert stored.theme.preset == "automotive-orange"
+
+
+async def test_theme_colors_normalize_to_uppercase(
+    auth_client: AsyncClient, fake_db, seeded_admin
+) -> None:
+    await _seed_default_shop(fake_db)
+    headers = await _login(auth_client)
+
+    response = await auth_client.put(
+        ADMIN_SHOP_URL,
+        headers=headers,
+        json={"theme": {"primary": "#f97316", "border": "#d4d4d4"}},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["theme"]["primary"] == "#F97316"
+    assert response.json()["theme"]["border"] == "#D4D4D4"
+
+
+async def test_legacy_document_without_theme_uses_default(
+    auth_client: AsyncClient, fake_db
+) -> None:
+    await fake_db["shop_settings"].update_one(
+        {"_id": SHOP_SETTINGS_ID},
+        {"$set": {"shop_name": "Legacy Shop"}},
+        upsert=True,
+    )
+
+    response = await auth_client.get(SHOP_URL)
+
+    assert response.status_code == 200
+    assert response.json()["shop_name"] == "Legacy Shop"
+    assert response.json()["theme"] == DEFAULT_THEME

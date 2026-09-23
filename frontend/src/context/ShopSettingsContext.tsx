@@ -1,16 +1,19 @@
 import { createContext, useContext } from "react";
-import type { ShopSettings } from "../types/api";
+import type { ShopSettings, ThemeColors } from "../types/api";
 
 export interface ShopSettingsState {
   data: ShopSettings | null;
   loading: boolean;
   error: string | null;
+  /** The active website theme (null until shop settings load). */
+  theme: ThemeColors | null;
 }
 
 export const ShopSettingsContext = createContext<ShopSettingsState>({
   data: null,
   loading: true,
   error: null,
+  theme: null,
 });
 
 export function useShopSettings(): ShopSettingsState {

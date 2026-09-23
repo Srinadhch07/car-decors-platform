@@ -19,6 +19,10 @@ def _to_patch(update: ShopSettingsUpdate) -> dict:
             patch[field] = ""
     if patch.get("social_links") is None:
         patch["social_links"] = {}
+    # There is no meaningful "no theme" state; explicit null keeps the current
+    # theme rather than storing a value that would invalidate the document.
+    if patch.get("theme") is None:
+        patch.pop("theme", None)
     return patch
 
 

@@ -2,35 +2,65 @@
 
 /* ─── Design Tokens ─── */
 
+/* Runtime theme palette. The defaults below reproduce the original static
+   palette exactly, so the site looks identical until an admin saves a theme
+   (ShopSettingsProvider then overrides these on <html> via applyTheme). */
+:root {
+  --theme-primary: #f97316;
+  --theme-primary-hover: #ea580c;
+  --theme-primary-active: #c2410c;
+  --theme-primary-deep: #9a3412;
+  --theme-primary-light: #fb923c;
+  --theme-primary-soft: #fff7ed;
+  --theme-secondary: #111111;
+  --theme-secondary-soft: #1a1a1a;
+  --theme-secondary-dim: #262626;
+  --theme-secondary-border: #333333;
+  --theme-secondary-deep: #0a0a0a;
+  --theme-surface: #ffffff;
+  --theme-surface-muted: #f5f5f4;
+  --theme-surface-dim: #e7e5e4;
+  --theme-foreground: #1a1a1a;
+  --theme-foreground-secondary: #525252;
+  --theme-foreground-muted: #a3a3a3;
+  --theme-foreground-inverse: #fafaf9;
+  --theme-border: #d4d4d4;
+  --theme-border-light: #e7e5e4;
+}
+
+/* Themeable color tokens — existing utilities (bg-orange-600, text-text-primary,
+   border-border, bg-dark-900, …) resolve through these to the runtime
+   --theme-* variables, so components keep using familiar classes and the whole
+   customer site re-themes without any component edits. */
+@theme inline {
+  --color-orange-50: var(--theme-primary-soft);
+  --color-orange-400: var(--theme-primary-light);
+  --color-orange-500: var(--theme-primary);
+  --color-orange-600: var(--theme-primary-hover);
+  --color-orange-700: var(--theme-primary-active);
+  --color-orange-800: var(--theme-primary-deep);
+
+  --color-dark-950: var(--theme-secondary-deep);
+  --color-dark-900: var(--theme-secondary);
+  --color-dark-800: var(--theme-secondary-soft);
+  --color-dark-700: var(--theme-secondary-dim);
+  --color-dark-600: var(--theme-secondary-border);
+
+  --color-surface: var(--theme-surface);
+  --color-surface-muted: var(--theme-surface-muted);
+  --color-surface-dim: var(--theme-surface-dim);
+
+  --color-text-primary: var(--theme-foreground);
+  --color-text-secondary: var(--theme-foreground-secondary);
+  --color-text-muted: var(--theme-foreground-muted);
+  --color-text-inverse: var(--theme-foreground-inverse);
+
+  --color-border: var(--theme-border);
+  --color-border-light: var(--theme-border-light);
+}
+
 @theme {
-  /* Brand colors — automotive orange accent on dark/white surfaces */
-  --color-orange-50: #fff7ed;
-  --color-orange-100: #ffedd5;
-  --color-orange-200: #fed7aa;
-  --color-orange-300: #fdba74;
-  --color-orange-400: #fb923c;
-  --color-orange-500: #f97316;
-  --color-orange-600: #ea580c;
-  --color-orange-700: #c2410c;
-
-  --color-dark-950: #0a0a0a;
-  --color-dark-900: #111111;
-  --color-dark-800: #1a1a1a;
-  --color-dark-700: #262626;
-  --color-dark-600: #333333;
-
-  --color-surface: #ffffff;
-  --color-surface-muted: #f5f5f4;
-  --color-surface-dim: #e7e5e4;
-
-  --color-text-primary: #1a1a1a;
-  --color-text-secondary: #525252;
-  --color-text-muted: #a3a3a3;
-  --color-text-inverse: #fafaf9;
-
-  --color-border: #d4d4d4;
-  --color-border-light: #e7e5e4;
-
+  /* Status colors — not part of the site theme */
   --color-success: #16a34a;
   --color-warning: #d97706;
   --color-error: #dc2626;
@@ -66,8 +96,8 @@
 
   body {
     font-family: var(--font-sans);
-    color: var(--color-text-primary);
-    background-color: var(--color-surface);
+    color: var(--theme-foreground);
+    background-color: var(--theme-surface);
   }
 
   img {
@@ -77,7 +107,7 @@
   }
 
   *:focus-visible {
-    outline: 2px solid var(--color-orange-500);
+    outline: 2px solid var(--theme-primary);
     outline-offset: 2px;
   }
 }

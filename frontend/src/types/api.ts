@@ -4,6 +4,18 @@ export type ProductAvailability = "IN_STOCK" | "OUT_OF_STOCK" | "ON_ORDER";
 
 // ─── Shop ───
 
+/** Website color/theme values saved in Shop Settings. */
+export interface ThemeColors {
+  preset: string;
+  primary: string;
+  secondary: string;
+  accent: string;
+  background: string;
+  foreground: string;
+  muted: string;
+  border: string;
+}
+
 export interface ShopSettings {
   shop_name: string;
   whatsapp_number: string;
@@ -13,6 +25,7 @@ export interface ShopSettings {
   business_hours: string | null;
   social_links: Record<string, string>;
   logo_url: string | null;
+  theme?: ThemeColors;
 }
 
 export interface ShopSettingsUpdatePayload {
@@ -24,6 +37,7 @@ export interface ShopSettingsUpdatePayload {
   business_hours?: string | null;
   social_links?: Record<string, string>;
   logo_url?: string | null;
+  theme?: ThemeColors;
 }
 
 // ─── Admin auth ───
