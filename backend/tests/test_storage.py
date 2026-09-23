@@ -156,11 +156,11 @@ def test_build_storage_defaults_to_local(tmp_path: Path) -> None:
     assert type(adapter).__name__ == "LocalStorageAdapter"
 
 
-def test_b2_mode_requires_credentials(tmp_path: Path) -> None:
+def test_s3_mode_requires_credentials(tmp_path: Path) -> None:
     with pytest.raises(ValueError):
         build_storage(
             Settings(
-                storage_mode="b2",
+                storage_mode="s3",
                 storage_local_dir=str(tmp_path),
                 _env_file=None,
             )
@@ -169,47 +169,111 @@ def test_b2_mode_requires_credentials(tmp_path: Path) -> None:
 
 def test_invalid_storage_mode_rejected() -> None:
     with pytest.raises(ValidationError):
-        Settings(storage_mode="s3")
+        Settings(storage_mode="gcs")
 
 
 # ---------------------------------------------------------------------------
-# B2 adapter pure logic (no SDK, no credentials needed)
+# S3 adapter pure logic (mocked boto3, no credentials needed)
 # ---------------------------------------------------------------------------
 
+S3_SETTINGS = {
+    "storage_mode": "s3",
+    "aws_access_key_id": "k",
+    "aws_secret_access_key": "a",
+    "aws_region": "us-east-1",
+    "aws_s3_bucket": "bucket",
+}
 
-def test_b2_public_url_and_key_extraction_with_public_base() -> None:
-    from app.storage.b2 import B2StorageAdapter
 
-    adapter = B2StorageAdapter(
-        Settings(
-            storage_mode="b2",
-            b2_key_id="k",
-            b2_application_key="a",
-            b2_bucket_name="bucket",
-            b2_public_url="https://cdn.example.com",
-        )
-    )
+def test_s3_public_url_and_key_extraction_with_default_host() -> None:
+    from app.storage.s3 import S3StorageAdapter
+
+    adapter = S3StorageAdapter(Settings(**S3_SETTINGS))
 
     url = adapter.public_url("products/abc123.jpg")
-    assert url == "https://cdn.example.com/products/abc123.jpg"
+    assert url == "https://bucket.s3.us-east-1.amazonaws.com/products/abc123.jpg"
     assert adapter.extract_key_from_url(url) == "products/abc123.jpg"
 
 
-def test_b2_key_extraction_from_arbitrary_host() -> None:
-    from app.storage.b2 import B2StorageAdapter
+def test_s3_public_url_and_key_extraction_with_public_cdn_prefix() -> None:
+    from app.storage.s3 import S3StorageAdapter
 
-    adapter = B2StorageAdapter(
-        Settings(
-            storage_mode="b2",
-            b2_key_id="k",
-            b2_application_key="a",
-            b2_bucket_name="bucket",
-            b2_public_url="https://cdn.example.com",
-        )
-    )
+    settings = dict(S3_SETTINGS, aws_s3_public_url="https://images.example.com")
+    adapter = S3StorageAdapter(Settings(**settings))
+
+    url = adapter.public_url("products/abc123.jpg")
+    assert url == "https://images.example.com/products/abc123.jpg"
+    assert adapter.extract_key_from_url(url) == "products/abc123.jpg"
+
+
+def test_s3_key_extraction_from_path_style_and_foreign_hosts() -> None:
+    from app.storage.s3 import S3StorageAdapter
+
+    adapter = S3StorageAdapter(Settings(**S3_SETTINGS))
 
     assert (
-        adapter.extract_key_from_url("https://f002.backblazeb2.com/b2/bucket/products/uuid.jpg")
+        adapter.extract_key_from_url("https://s3.us-east-1.amazonaws.com/bucket/products/uuid.jpg")
         == "products/uuid.jpg"
     )
     assert adapter.extract_key_from_url("https://example.com/logo.png") is None
+
+
+async def test_s3_upload_calls_put_object_with_content_type(monkeypatch) -> None:
+    import boto3
+
+    from app.storage.s3 import S3StorageAdapter
+
+    calls = {}
+
+    class FakeClient:
+        def put_object(self, **kwargs):
+            calls["put_object"] = kwargs
+
+    monkeypatch.setattr(boto3, "client", lambda *a, **kw: FakeClient())
+    adapter = S3StorageAdapter(Settings(**S3_SETTINGS))
+
+    await adapter.upload("products/abc.jpg", b"data", "image/jpeg")
+
+    assert calls["put_object"]["Bucket"] == "bucket"
+    assert calls["put_object"]["Key"] == "products/abc.jpg"
+    assert calls["put_object"]["Body"] == b"data"
+    assert calls["put_object"]["ContentType"] == "image/jpeg"
+
+
+async def test_s3_delete_extracts_key_and_calls_delete_object(monkeypatch) -> None:
+    import boto3
+
+    from app.storage.s3 import S3StorageAdapter
+
+    deleted = {}
+
+    class FakeClient:
+        def delete_object(self, **kwargs):
+            deleted["delete_object"] = kwargs
+
+    monkeypatch.setattr(boto3, "client", lambda *a, **kw: FakeClient())
+    adapter = S3StorageAdapter(Settings(**S3_SETTINGS))
+
+    assert adapter.extract_key_from_url("https://cdn.other/path.jpg") is None
+
+    url = adapter.public_url("products/uuid.jpg")
+    await adapter.delete(url)
+    assert deleted["delete_object"]["Bucket"] == "bucket"
+    assert deleted["delete_object"]["Key"] == "products/uuid.jpg"
+
+
+async def test_s3_upload_failure_surfaces_as_storage_error(monkeypatch) -> None:
+    import boto3
+
+    from app.storage.base import StorageError
+    from app.storage.s3 import S3StorageAdapter
+
+    class FakeClient:
+        def put_object(self, **kwargs):
+            raise RuntimeError("boom")
+
+    monkeypatch.setattr(boto3, "client", lambda *a, **kw: FakeClient())
+    adapter = S3StorageAdapter(Settings(**S3_SETTINGS))
+
+    with pytest.raises(StorageError):
+        await adapter.upload("products/abc.jpg", b"data", "image/jpeg")

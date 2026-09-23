@@ -126,7 +126,7 @@ Single monorepo with two independent applications:
 │  /products, /admin, ...    │  →  │  /api/* REST + multipart    │
 │  ApiClient (credentials)   │  →  │  Services → Repositories    │
 │  MSW-tested Vitest suite   │  →  │  MongoDB (PyMongo async)    │
-└────────────────────────────┘     │  Storage adapter (local/B2) │
+└────────────────────────────┘     │  Storage adapter (local/S3) │
                                    └─────────────────────────────┘
         browser                         http://localhost:5173 → :8000
       .tsx components                  proxied in dev via Vite
@@ -159,7 +159,7 @@ car-decor-platform/
 │   │   ├── models/      # Pydantic models: product, category, shop, auth, ...
 │   │   ├── repositories/# Data access layer (BaseRepository, ProductRepository, ...)
 │   │   ├── services/    # Business logic: auth, catalog, products, shop
-│   │   ├── storage/     # base/local/B2 adapters + image validation
+│   │   ├── storage/     # base/local/S3 adapters + image validation
 │   │   └── main.py      # create_app() factory + ASGI entry
 │   ├── scripts/seed.py  # Idempotent CLI seed (admin, shop, optional samples)
 │   ├── mongo_smoke.py   # Real MongoDB + local storage integration smoke run
@@ -197,7 +197,7 @@ car-decor-platform/
 | Security              | Double-submit CSRF cookie + `X-CSRF-Token` header, login rate limiting |
 | Media uploads         | python-multipart, magic-byte image validation, 5 MB cap |
 | Dev tooling           | pytest, pytest-asyncio, httpx, mongomock, ruff (lint + format) |
-| Optional storage      | Backblaze B2 via b2sdk (when `STORAGE_MODE=b2`) |
+| Optional storage      | Amazon S3 via boto3 (when `STORAGE_MODE=s3`) |
 
 ### Frontend
 
@@ -263,8 +263,8 @@ All backend settings are read from the environment or a local `.env` file. See
 | `JWT_SECRET` | Signing key for sessions; required in production |
 | `COOKIE_*`, `CSRF_COOKIE_NAME` | Session/CSRF cookie tuning (secure flag, samesite) |
 | `LOGIN_RATE_LIMIT_MAX`, `LOGIN_RATE_LIMIT_WINDOW_MINUTES` | Per-IP login throttle |
-| `STORAGE_MODE` | `local` (default, files served at `/media`) or `b2` (Backblaze B2) |
-| `B2_*` | Backblaze B2 credentials — only needed for `STORAGE_MODE=b2`; never commit |
+| `STORAGE_MODE` | `local` (default, files served at `/media`) or `s3` (Amazon S3) |
+| `AWS_*` | AWS credentials — only needed for `STORAGE_MODE=s3`; never commit |
 | `PRODUCT_IMAGE_MAX_BYTES` | Max upload size (default 5 MB) |
 | `CORS_ORIGINS` | Comma-separated allowed browser origins |
 
@@ -272,7 +272,7 @@ The frontend uses a single variable: `VITE_API_BASE_URL` (empty means same-origi
 which is correct in dev through the Vite proxy).
 
 **Never commit real secrets.** `.env` files are git-ignored; only `.env.example`
-templates are tracked. Do not expose B2 keys or real admin passwords.
+templates are tracked. Do not expose AWS keys or real admin passwords.
 
 ---
 

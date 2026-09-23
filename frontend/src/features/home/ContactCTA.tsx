@@ -2,9 +2,15 @@ import { Phone, Mail, MessageCircle } from "lucide-react";
 import { Container } from "../../components/ui";
 import { useShopSettings, hasContent } from "../../context/ShopSettingsContext";
 import { buildWhatsAppUrl } from "../../lib/utils/whatsapp";
+import { useScrollReveal } from "../../lib/motion";
 
 export function ContactCTA() {
   const { data: shop } = useShopSettings();
+  const scopeRef = useScrollReveal("[data-reveal]", {
+    y: 40,
+    stagger: 0.1,
+    start: "top 88%",
+  });
 
   const hasPhone = hasContent(shop?.phone);
   const hasEmail = hasContent(shop?.email);
@@ -13,9 +19,12 @@ export function ContactCTA() {
   if (!hasPhone && !hasEmail && !hasWhatsApp) return null;
 
   return (
-    <section className="section-y bg-surface-muted">
+    <section ref={scopeRef} className="section-y bg-surface-muted">
       <Container>
-        <div className="rounded-xl border border-border-light border-t-2 border-t-orange-600 bg-white p-8 text-center shadow-card sm:p-10">
+        <div
+          data-reveal
+          className="rounded-xl border border-border-light border-t-2 border-t-orange-600 bg-white p-8 text-center shadow-card sm:p-10"
+        >
           <h2 className="text-xl font-bold tracking-tight text-text-primary sm:text-2xl">
             Ready to Upgrade Your Ride?
           </h2>
@@ -23,7 +32,7 @@ export function ContactCTA() {
             Get in touch with us for the best car accessories and decor solutions.
           </p>
 
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+          <div data-reveal className="mt-6 flex flex-wrap items-center justify-center gap-3">
             {hasWhatsApp && (
               <a
                 href={buildWhatsAppUrl(shop!.whatsapp_number)}

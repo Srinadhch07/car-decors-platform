@@ -2,7 +2,7 @@
 
 The product service depends only on :class:`Storage`, so local development
 tests run against :class:`LocalStorageAdapter` while deployment uses
-:class:`B2StorageAdapter` without any business-logic changes.
+:class:`S3StorageAdapter` without any business-logic changes.
 """
 
 from app.storage.base import (
@@ -15,10 +15,12 @@ from app.storage.base import (
 )
 from app.storage.dependencies import StorageDep, get_storage
 from app.storage.local import LocalStorageAdapter
+from app.storage.s3 import S3StorageAdapter
 
 __all__ = [
     "ImageValidationError",
     "LocalStorageAdapter",
+    "S3StorageAdapter",
     "Storage",
     "StorageDep",
     "StorageError",

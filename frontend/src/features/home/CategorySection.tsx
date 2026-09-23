@@ -4,6 +4,7 @@ import { ArrowRight } from "lucide-react";
 import { api } from "../../lib/api/client";
 import type { Category } from "../../types/api";
 import { Container, SectionHeading, ErrorState, LoadingState, EmptyState } from "../../components/ui";
+import { useScrollReveal } from "../../lib/motion";
 import { CategoryCard } from "./CategoryCard";
 
 export function CategorySection() {
@@ -29,8 +30,14 @@ export function CategorySection() {
     void fetchCategories();
   }, [fetchCategories]);
 
+  const scopeRef = useScrollReveal("[data-reveal]", {
+    y: 40,
+    stagger: 0.08,
+    start: "top 88%",
+  });
+
   return (
-    <section className="section-y bg-surface-muted">
+    <section ref={scopeRef} className="section-y bg-surface-muted">
       <Container>
         <SectionHeading
           title="Shop by Category"
@@ -62,9 +69,15 @@ export function CategorySection() {
         )}
 
         {!loading && !error && categories.length > 0 && (
-          <div className="-mx-4 flex gap-4 overflow-x-auto px-4 pb-2 snap-x snap-mandatory sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:snap-none">
-            {categories.map((cat) => (
-              <CategoryCard key={cat.id} category={cat} />
+          <div className="-mx-4 flex gap-4 overflow-x-auto px-4 pb-2 snap-x snap-mandatory sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:snap-none sm:gap-5">
+            {categories.map((cat, index) => (
+              <div
+                key={cat.id}
+                data-reveal
+                className="flex min-w-[160px] flex-col snap-start sm:min-w-0 sm:flex-1 sm:basis-[calc(33.333%-1.5rem)] sm:snap-none"
+              >
+                <CategoryCard category={cat} index={index + 1} />
+              </div>
             ))}
           </div>
         )}

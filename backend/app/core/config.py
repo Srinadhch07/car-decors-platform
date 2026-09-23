@@ -77,18 +77,20 @@ class Settings(BaseSettings):
     login_rate_limit_max: int = 5
     login_rate_limit_window_minutes: int = 15
 
-    # Image storage. "local" is the development-safe default; "b2" activates
-    # the Backblaze B2 adapter which requires B2_KEY_ID and B2_APPLICATION_KEY.
+    # Image storage. "local" is the development-safe default; "s3" activates
+    # the Amazon S3 adapter which requires AWS credentials and a bucket.
     storage_mode: str = "local"
     # Directory used by the local adapter; served at /media when mounting.
     storage_local_dir: str = "storage-local"
 
-    # Backblaze B2 (only relevant in "b2" storage mode). Never committed.
-    b2_key_id: str = ""
-    b2_application_key: str = ""
-    b2_bucket_name: str = ""
-    # Optional public CDN/URL prefix; falls back to a signed download URL.
-    b2_public_url: str = ""
+    # Amazon S3 (only relevant in "s3" storage mode). Never committed.
+    aws_access_key_id: str = ""
+    aws_secret_access_key: str = ""
+    aws_region: str = ""
+    aws_s3_bucket: str = ""
+    # Optional public CDN/URL prefix; when empty the standard S3
+    # virtual-hosted bucket URL is used for the image reference.
+    aws_s3_public_url: str = ""
 
     # Product image upload limits (bytes). 5 MB is the documented maximum.
     product_image_max_bytes: int = 5 * 1024 * 1024
@@ -105,8 +107,8 @@ class Settings(BaseSettings):
     @classmethod
     def _validate_storage_mode(cls, value: str) -> str:
         normalized = value.strip().lower()
-        if normalized not in {"local", "b2"}:
-            raise ValueError("storage_mode must be one of: local, b2")
+        if normalized not in {"local", "s3"}:
+            raise ValueError("storage_mode must be one of: local, s3")
         return normalized
 
     @model_validator(mode="after")

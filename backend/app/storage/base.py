@@ -1,8 +1,9 @@
-"""Storage interface shared by the local and B2 adapters.
+"""Storage interface shared by the local and S3 adapters.
 
 Only the operations B5 actually needs are exposed: upload, delete, public URL
 generation, and key extraction. Keeping the surface small makes swapping the
-backend (e.g. B2 for S3) possible without touching product business logic.
+backend (e.g. S3 for another provider) possible without touching product
+business logic.
 """
 
 from abc import ABC, abstractmethod
@@ -55,18 +56,18 @@ def build_storage(settings: Settings) -> Storage:
     """Instantiate the storage adapter configured by ``settings``.
 
     The default mode is ``local`` so importing the application never requires
-    B2 credentials. B2 mode fails fast with a clear message when credentials
-    are missing.
+    AWS or other credentials. S3 mode fails fast with a clear message when
+    credentials are missing.
     """
     mode = settings.storage_mode.lower()
     if mode == "local":
         from app.storage.local import LocalStorageAdapter
 
         return LocalStorageAdapter(Path(settings.storage_local_dir))
-    if mode == "b2":
-        from app.storage.b2 import B2StorageAdapter
+    if mode == "s3":
+        from app.storage.s3 import S3StorageAdapter
 
-        return B2StorageAdapter(settings)
+        return S3StorageAdapter(settings)
     # Unreachable when config validation is active; defensive for direct use.
     raise ValueError(f"unknown storage_mode: {settings.storage_mode!r}")
 

@@ -12,7 +12,7 @@ separates development from production, and everything required before going live
 | Backend env file | `backend/.env` (APP_ENV unset or `development`) | `backend/.env.production` (APP_ENV=`production`) OR platform env vars |
 | Frontend env file | `frontend/.env` (dev server proxies `/api`, `/media` to :8000) | `frontend/.env.production` (used by `vite build`) |
 | MongoDB | `mongodb://localhost:27017` (db `car_decor`) | Production connection string (e.g. MongoDB Atlas) |
-| Image storage | `STORAGE_MODE=local` (`storage-local/`, served at `/media`) | `STORAGE_MODE=b2` (Backblaze B2 object storage) |
+| Image storage | `STORAGE_MODE=local` (`storage-local/`, served at `/media`) | `STORAGE_MODE=s3` (Amazon S3 object storage) |
 | Cookies | `COOKIE_SECURE=false` (plain HTTP) | `COOKIE_SECURE=true` (HTTPS only) |
 | CORS | `http://localhost:5173` | Explicit production frontend origin(s), never `*` |
 | Debug | `DEBUG=false` default | `DEBUG` must be `false` |
@@ -95,12 +95,17 @@ git-ignored. The repo only tracks placeholder templates:
 
 ### Storage
 
-- `STORAGE_MODE=b2` in production (Backblaze B2 object storage). The local
+- `STORAGE_MODE=s3` in production (Amazon S3 object storage). The local
   development adapter (`STORAGE_MODE=local`) must **not** be used in production
   unless you deliberately run everything on a single combined node — which is not
   the recommended deployment architecture.
-- B2 requires `B2_KEY_ID`, `B2_APPLICATION_KEY`, `B2_BUCKET_NAME`. Optionally
-  `B2_PUBLIC_URL` (public CDN prefix); when empty, signed download URLs are used.
+- S3 requires `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION`,
+  `AWS_S3_BUCKET`. IAM credentials need `s3:PutObject`, `s3:DeleteObject`,
+  `s3:HeadObject`, and — when `AWS_S3_PUBLIC_URL` is empty — public-read bucket
+  access so the generated `https://<bucket>.s3.<region>.amazonaws.com/<key>`
+  URLs are fetchable by anonymous customers.
+- `AWS_S3_PUBLIC_URL` (optional): a public CDN/static prefix in front of the
+  bucket; when empty, the standard virtual-hosted S3 URL is used.
 - Product images are stored under `products/<uuid>.<ext>` keys; the database only
   stores the `image_url`, so a migration/export is simple.
 
@@ -180,11 +185,12 @@ CORS_ORIGINS=
 JWT_SECRET=
 COOKIE_SECURE=true
 COOKIE_SAMESITE=lax
-STORAGE_MODE=b2
-B2_KEY_ID=
-B2_APPLICATION_KEY=
-B2_BUCKET_NAME=
-B2_PUBLIC_URL=            (optional)
+STORAGE_MODE=s3
+AWS_ACCESS_KEY_ID=
+AWS_SECRET_ACCESS_KEY=
+AWS_REGION=
+AWS_S3_BUCKET=
+AWS_S3_PUBLIC_URL=        (optional; empty uses the standard S3 URL)
 SEED_ADMIN_EMAIL=         (manual seed step only)
 SEED_ADMIN_PASSWORD_HASH= (manual seed step only; prefer a hash over plaintext)
 ```
@@ -200,8 +206,8 @@ VITE_API_BASE_URL=        (empty = same-origin, or full backend URL)
 ## Deployment Checklist
 
 - [ ] Production database configured (MongoDB URI + dedicated database name)
-- [ ] Production secrets configured (`JWT_SECRET`, B2 keys) via platform env vars
-- [ ] Production storage configured (`STORAGE_MODE=b2` + B2 vars)
+- [ ] Production secrets configured (`JWT_SECRET`, AWS keys) via platform env vars
+- [ ] Production storage configured (`STORAGE_MODE=s3` + AWS/S3 vars)
 - [ ] Backend URL configured
 - [ ] Frontend API URL configured (`VITE_API_BASE_URL` or same-origin proxy)
 - [ ] CORS configured (explicit origins, no wildcard)

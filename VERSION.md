@@ -41,7 +41,7 @@ FastAPI application factory (backend/app/main.py)
   ├── Services     : business rules (auth, catalog, products, shop)
   ├── Repositories : data access over MongoDB (src/repositories)
   ├── Models       : Pydantic v2 request/response schemas
-  ├── Storage      : Storage ABC → LocalStorageAdapter | B2StorageAdapter
+  ├── Storage      : Storage ABC → LocalStorageAdapter | S3StorageAdapter
   ├── Core         : config (pydantic-settings), db lifecycle, rate_limit,
   │                  security (JWT/Argon2id/CSRF), slugs, validation
   └── Indexes      : ensured on startup (app/db/indexes.py)
@@ -58,7 +58,7 @@ Key design decisions:
 - **Business logic and data access are separated** (`services/` vs `repositories/`)
   so route handlers stay thin and rules are unit-testable.
 - **Storage is abstracted** behind a common interface so local development and
-  production object storage (Backblaze B2) share one code path.
+  production object storage (Amazon S3) share one code path.
 - **Money is stored precisely** as BSON `Decimal128` and serialized as a decimal
   string; MongoDB-side price sorting is deliberately avoided (done in the service
   layer) to prevent float drift.
@@ -137,8 +137,8 @@ car-decor-platform/
   checked; ≤ 5 MB (413 when too large); image stored via the storage adapter and
   surfaced as `image_url`.
 - **Storage:** `local` (default; files in `storage-local/`, served at `/media`) or
-  `b2` (Backblaze B2, requires `B2_KEY_ID` / `B2_APPLICATION_KEY` /
-  `B2_BUCKET_NAME`).
+  `s3` (Amazon S3, requires `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` /
+  `AWS_S3_BUCKET`).
 - **DB:** MongoDB, database `car_decor` by default. Indexes ensured at startup:
   unique admin email, unique category slug, unique `(category_id, slug)`
   subcategories, product indexes on slug / category / subcategory / active /

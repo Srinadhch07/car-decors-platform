@@ -4,6 +4,7 @@ import { ArrowRight } from "lucide-react";
 import { api } from "../../lib/api/client";
 import type { Product } from "../../types/api";
 import { Container, SectionHeading, ErrorState, LoadingState, EmptyState } from "../../components/ui";
+import { useScrollReveal } from "../../lib/motion";
 import { ProductCard } from "./ProductCard";
 
 export function FeaturedProducts() {
@@ -29,8 +30,14 @@ export function FeaturedProducts() {
     void fetchProducts();
   }, [fetchProducts]);
 
+  const scopeRef = useScrollReveal("[data-reveal]", {
+    y: 48,
+    stagger: 0.1,
+    start: "top 85%",
+  });
+
   return (
-    <section className="section-y">
+    <section ref={scopeRef} className="section-y">
       <Container>
         <SectionHeading
           title="Featured Products"
@@ -64,7 +71,9 @@ export function FeaturedProducts() {
         {!loading && !error && products.length > 0 && (
           <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
             {products.map((product) => (
-              <ProductCard key={product.id} product={product} />
+              <div key={product.id} data-reveal className="h-full">
+                <ProductCard product={product} />
+              </div>
             ))}
           </div>
         )}
