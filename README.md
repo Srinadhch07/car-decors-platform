@@ -51,6 +51,8 @@ and information online, conversation and close offline.
 4. Enquiry funnel: WhatsApp and phone CTAs wired directly to the shop number.
 5. Admin console: secure login, dashboard with live catalog counts, product CRUD,
    category/subcategory CRUD, and shop-settings editing.
+6. Admin account management: view account, change email, change password, and
+   email-based password reset (single-use, hashed reset tokens via Gmail SMTP).
 
 ### Intentionally Out of Scope (V1)
 
@@ -263,6 +265,8 @@ All backend settings are read from the environment or a local `.env` file. See
 | `JWT_SECRET` | Signing key for sessions; required in production |
 | `COOKIE_*`, `CSRF_COOKIE_NAME` | Session/CSRF cookie tuning (secure flag, samesite) |
 | `LOGIN_RATE_LIMIT_MAX`, `LOGIN_RATE_LIMIT_WINDOW_MINUTES` | Per-IP login throttle |
+| `SMTP_*`, `FRONTEND_URL` | Gmail SMTP + storefront origin used for the password-reset email |
+| `PASSWORD_RESET_TOKEN_MINUTES`, `FORGOT_PASSWORD_RATE_LIMIT_MAX`, `RESET_PASSWORD_RATE_LIMIT_MAX` | Reset-token lifetime and per-IP activate/reset throttle |
 | `STORAGE_MODE` | `local` (default, files served at `/media`) or `s3` (Amazon S3) |
 | `AWS_*` | AWS credentials — only needed for `STORAGE_MODE=s3`; never commit |
 | `PRODUCT_IMAGE_MAX_BYTES` | Max upload size (default 5 MB) |

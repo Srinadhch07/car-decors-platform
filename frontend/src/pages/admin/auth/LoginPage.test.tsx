@@ -8,6 +8,7 @@ import { TestWrapper } from "../../../test-utils";
 import type { AdminUser } from "../../../types/api";
 import { AdminAuthProvider } from "../../../features/admin/auth";
 import LoginPage from "./LoginPage";
+import ForgotPasswordPage from "./ForgotPasswordPage";
 
 const adminUser: AdminUser = { id: "admin-1", email: "admin@slg.com" };
 
@@ -32,6 +33,7 @@ function renderLogin() {
   return render(
     <Routes>
       <Route path="/admin/login" element={<LoginPage />} />
+      <Route path="/admin/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/admin" element={<div>Admin Home</div>} />
     </Routes>,
     {
@@ -126,5 +128,30 @@ describe("LoginPage", () => {
     await screen.findByRole("alert");
     expect(screen.queryByText("Admin Home")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Sign In" })).toBeInTheDocument();
+  });
+
+  it("links to the forgot-password page", async () => {
+    renderLogin();
+    expect(await screen.findByRole("link", { name: /forgot your password/i })).toHaveAttribute(
+      "href",
+      "/admin/forgot-password",
+    );
+  });
+
+  it("shows a notice banner passed through navigation state", async () => {
+    render(
+      <Routes>
+        <Route path="/admin/login" element={<LoginPage />} />
+        <Route path="/admin" element={<div>Admin Home</div>} />
+      </Routes>,
+      {
+        wrapper: ({ children }) => (
+          <TestWrapper initialEntries={[{ pathname: "/admin/login", state: { notice: "Email updated." } }]}>
+            <AdminAuthProvider>{children}</AdminAuthProvider>
+          </TestWrapper>
+        ),
+      },
+    );
+    expect(await screen.findByRole("status")).toHaveTextContent("Email updated.");
   });
 });

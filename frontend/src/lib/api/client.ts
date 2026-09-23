@@ -3,6 +3,9 @@ import type {
   Category,
   CategoryCreatePayload,
   CategoryUpdatePayload,
+  ChangeEmailPayload,
+  ChangePasswordPayload,
+  ForgotPasswordResponse,
   Product,
   ProductListPage,
   ProductQueryParams,
@@ -10,6 +13,7 @@ import type {
   ProductUpdatePayload,
   ProductAdminListPage,
   ProductAdminQueryParams,
+  ResetPasswordPayload,
   ShopSettings,
   ShopSettingsUpdatePayload,
   Subcategory,
@@ -130,6 +134,29 @@ export class ApiClient {
 
   async adminMe(): Promise<AdminUser> {
     return this.request<AdminUser>("/api/admin/auth/me");
+  }
+
+  /** Change the login email (current password required; revokes the session). */
+  async adminChangeEmail(payload: ChangeEmailPayload): Promise<void> {
+    await this.request<void>("/api/admin/auth/change-email", this.jsonInit("POST", payload));
+  }
+
+  /** Change the password (current password required; revokes the session). */
+  async adminChangePassword(payload: ChangePasswordPayload): Promise<void> {
+    await this.request<void>("/api/admin/auth/change-password", this.jsonInit("POST", payload));
+  }
+
+  /** Request a password-reset link; the backend always responds generically. */
+  async adminForgotPassword(email: string): Promise<ForgotPasswordResponse> {
+    return this.request<ForgotPasswordResponse>(
+      "/api/admin/auth/forgot-password",
+      this.jsonInit("POST", { email }),
+    );
+  }
+
+  /** Redeem a one-time reset token and set a new password. */
+  async adminResetPassword(payload: ResetPasswordPayload): Promise<void> {
+    await this.request<void>("/api/admin/auth/reset-password", this.jsonInit("POST", payload));
   }
 
   // ─── Admin: Shop settings ───

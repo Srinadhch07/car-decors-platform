@@ -48,6 +48,31 @@ export interface AdminUser {
   email: string;
 }
 
+/** Authenticated email change (current password required). */
+export interface ChangeEmailPayload {
+  new_email: string;
+  current_password: string;
+}
+
+/** Authenticated password change (current password required). */
+export interface ChangePasswordPayload {
+  current_password: string;
+  new_password: string;
+  confirm_password: string;
+}
+
+/** Public forgot-password request; the backend replies identically for any email. */
+export interface ForgotPasswordResponse {
+  message: string;
+}
+
+/** One-time reset token plus the new password. */
+export interface ResetPasswordPayload {
+  token: string;
+  new_password: string;
+  confirm_password: string;
+}
+
 // ─── Categories ───
 
 export interface Category {

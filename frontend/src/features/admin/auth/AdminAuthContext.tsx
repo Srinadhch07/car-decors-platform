@@ -9,6 +9,12 @@ export interface AdminAuthState {
   loading: boolean;
   login: (email: string, password: string) => Promise<AdminUser>;
   logout: () => Promise<void>;
+  /**
+   * Best-effort logout used after the server revoked the session (email or
+   * password change): clears cookies and the in-memory session so the UI can
+   * bounce the admin to the login screen.
+   */
+  invalidateSession: () => Promise<void>;
   /** Alias for `session` — kept for the cross-agent contract (`useAdminSession`). */
   admin: AdminUser | null;
   /** Alias for `isAuthenticated` — kept for the cross-agent contract. */
@@ -58,6 +64,15 @@ export function AdminAuthProvider({ children }: AdminAuthProviderProps) {
     }
   }, []);
 
+  const invalidateSession = useCallback(async () => {
+    try {
+      await api.adminLogout();
+    } catch {
+      // The server already revoked this session; the call may 401/403.
+    }
+    setSession(null);
+  }, []);
+
   const value = useMemo<AdminAuthState>(
     () => ({
       session,
@@ -65,10 +80,11 @@ export function AdminAuthProvider({ children }: AdminAuthProviderProps) {
       loading,
       login,
       logout,
+      invalidateSession,
       admin: session,
       isAuthed: session !== null,
     }),
-    [session, loading, login, logout],
+    [session, loading, login, logout, invalidateSession],
   );
 
   return <AdminAuthContext value={value}>{children}</AdminAuthContext>;

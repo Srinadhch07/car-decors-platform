@@ -65,8 +65,22 @@ git-ignored. The repo only tracks placeholder templates:
   restart). Generate: `python -c "import secrets; print(secrets.token_urlsafe(64))"`.
 - `JWT_ACCESS_MINUTES=30` — session lifetime.
 - `LOGIN_RATE_LIMIT_MAX=5` per `LOGIN_RATE_LIMIT_WINDOW_MINUTES=15` per client IP.
-  The limiter is in-memory per process — fine for a single-node deployment;
+  The limiter is in-memory per process - fine for a single-node deployment;
   a distributed limiter is an optional future improvement.
+
+### Password reset (admin)
+
+- `FRONTEND_URL` - the production storefront origin. The backend builds
+  password-reset links (`<FRONTEND_URL>/admin/reset-password?token=...`) from it;
+  never put credentials into the URL.
+- `SMTP_HOST=smtp.gmail.com`, `SMTP_PORT=587`, `SMTP_USERNAME`, `SMTP_PASSWORD`,
+  `SMTP_FROM_EMAIL` - Gmail SMTP used only by the backend to send the reset
+  email. `SMTP_PASSWORD` is a Google **App Password**, never the account
+  password, and must never appear in the frontend, in `VITE_*` variables, in
+  Git, or in logs.
+- `PASSWORD_RESET_TOKEN_MINUTES=30` - single-use, hashed-token lifetime.
+- `FORGOT_PASSWORD_RATE_LIMIT_MAX=5` per window and
+  `RESET_PASSWORD_RATE_LIMIT_MAX=5` per window (per client IP).
 
 ### Cookies
 
@@ -151,9 +165,10 @@ production the static file server must return `index.html` for unknown paths
 
 Customer routes: `/`, `/products`, `/products/:slug`, `/categories/:slug`,
 `/about`, `/contact`.
-Admin routes: `/admin/login`, `/admin` (dashboard), `/admin/products`,
-`/admin/products/new`, `/admin/products/:productId/edit`, `/admin/categories`,
-`/admin/subcategories`, `/admin/shop`.
+Admin routes: `/admin/login`, `/admin/forgot-password`, `/admin/reset-password`,
+`/admin` (dashboard), `/admin/products`, `/admin/products/new`,
+`/admin/products/:productId/edit`, `/admin/categories`, `/admin/subcategories`,
+`/admin/shop`, `/admin/account`.
 
 Example Nginx `location` blocks:
 
@@ -185,6 +200,17 @@ CORS_ORIGINS=
 JWT_SECRET=
 COOKIE_SECURE=true
 COOKIE_SAMESITE=lax
+FRONTEND_URL=
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USERNAME=
+SMTP_PASSWORD=
+SMTP_FROM_EMAIL=
+PASSWORD_RESET_TOKEN_MINUTES=30
+FORGOT_PASSWORD_RATE_LIMIT_MAX=5
+FORGOT_PASSWORD_RATE_LIMIT_WINDOW_MINUTES=15
+RESET_PASSWORD_RATE_LIMIT_MAX=5
+RESET_PASSWORD_RATE_LIMIT_WINDOW_MINUTES=15
 STORAGE_MODE=s3
 AWS_ACCESS_KEY_ID=
 AWS_SECRET_ACCESS_KEY=

@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate, NavLink, Outlet, useNavigate } from "react-router-dom";
-import { Car, Layers, LayoutDashboard, LogOut, Menu, Package, ShieldCheck, Store, Tags, X } from "lucide-react";
+import { Car, Layers, LayoutDashboard, LogOut, Menu, Package, ShieldCheck, Store, Tags, UserCircle, X } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useAdminAuth } from "../auth/AdminAuthContext";
+import { ThridhaSignature } from "../../../components/common/ThridhaSignature";
 
 interface NavItem {
   to: string;
@@ -18,6 +19,7 @@ const NAV_ITEMS: NavItem[] = [
   { to: "/admin/categories", label: "Categories", icon: Tags },
   { to: "/admin/subcategories", label: "Subcategories", icon: Layers },
   { to: "/admin/shop", label: "Shop Settings", icon: Store },
+  { to: "/admin/account", label: "Account", icon: UserCircle },
 ];
 
 interface AdminNavProps {
@@ -189,6 +191,10 @@ export function AdminShell() {
         <main className="flex-1 p-4 sm:p-6 lg:p-8">
           <Outlet />
         </main>
+
+        <footer className="border-t border-border-light bg-white px-4 py-3">
+          <ThridhaSignature variant="admin" />
+        </footer>
       </div>
     </div>
   );

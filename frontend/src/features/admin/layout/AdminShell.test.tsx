@@ -56,6 +56,7 @@ describe("AdminShell", () => {
     expect(within(nav).getByRole("link", { name: /^categories$/i })).toBeInTheDocument();
     expect(within(nav).getByRole("link", { name: /^subcategories$/i })).toBeInTheDocument();
     expect(within(nav).getByRole("link", { name: /^shop settings$/i })).toBeInTheDocument();
+    expect(within(nav).getByRole("link", { name: /^account$/i })).toBeInTheDocument();
     expect(await screen.findByText(adminUser.email)).toBeInTheDocument();
   });
 
@@ -67,6 +68,15 @@ describe("AdminShell", () => {
   it("renders sibling page content through the outlet", async () => {
     renderShell(["/admin/products"]);
     expect(await screen.findByText("Products Content")).toBeInTheDocument();
+  });
+
+  it("renders the creator signature in the admin shell footer", async () => {
+    renderShell();
+    expect(await screen.findByText("A Thridha Labs creation.")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Srinadh Chintakindi" })).toHaveAttribute(
+      "href",
+      "https://srinadhch07.vercel.app/",
+    );
   });
 
   it("marks the active route with aria-current", async () => {
@@ -131,6 +141,10 @@ describe("AdminShell", () => {
     expect(within(drawerNav).getByRole("link", { name: /^shop settings$/i })).toHaveAttribute(
       "href",
       "/admin/shop",
+    );
+    expect(within(drawerNav).getByRole("link", { name: /^account$/i })).toHaveAttribute(
+      "href",
+      "/admin/account",
     );
     expect(within(drawerNav).getByRole("link", { name: /^dashboard$/i })).toHaveAttribute(
       "href",

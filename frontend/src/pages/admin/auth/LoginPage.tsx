@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Car } from "lucide-react";
 import { ApiRequestError } from "../../../lib/api/client";
 import { useAdminAuth } from "../../../features/admin/auth";
@@ -19,6 +19,8 @@ const inputClass =
 export function LoginPage() {
   const { login, isAuthenticated, loading } = useAdminAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const notice = (location.state as { notice?: string } | null)?.notice ?? null;
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -64,6 +66,15 @@ export function LoginPage() {
           <h1 className="mt-3 text-2xl font-bold tracking-tight text-white">Admin Sign In</h1>
           <p className="mt-1 text-sm text-text-muted">Car Decor platform administration</p>
         </div>
+
+        {notice && (
+          <div
+            role="status"
+            className="mb-4 rounded-md border border-green-900 bg-green-950/40 px-3 py-2.5 text-sm text-green-300"
+          >
+            {notice}
+          </div>
+        )}
 
         <form
           onSubmit={handleSubmit}
@@ -126,6 +137,12 @@ export function LoginPage() {
             )}
             {submitting ? "Signing in…" : "Sign In"}
           </button>
+
+          <p className="mt-4 text-center text-sm">
+            <Link to="/admin/forgot-password" className="font-medium text-orange-500 hover:text-orange-400">
+              Forgot your password?
+            </Link>
+          </p>
         </form>
       </div>
     </div>

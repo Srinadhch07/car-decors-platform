@@ -4,6 +4,11 @@ import { ShopSettingsContext, type ShopSettingsState } from "./context/ShopSetti
 import { DEFAULT_THEME } from "./lib/theme";
 import type { ShopSettings } from "./types/api";
 
+/** A memory-router entry: a plain path, or an object carrying location state. */
+export type RouterEntry =
+  | string
+  | { pathname: string; search?: string; hash?: string; state?: unknown };
+
 export const mockShopSettings: ShopSettings = {
   shop_name: "SLG Car Decors",
   whatsapp_number: "+919876543210",
@@ -33,7 +38,7 @@ export function createMockState(
 
 interface WrapperProps {
   children: ReactNode;
-  initialEntries?: string[];
+  initialEntries?: RouterEntry[];
   shopState?: ShopSettingsState;
 }
 

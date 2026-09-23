@@ -1,6 +1,7 @@
 import { Car, ExternalLink, Mail, MapPin, Phone } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useShopSettings, hasContent } from "../../context/ShopSettingsContext";
+import { ThridhaSignature } from "../common/ThridhaSignature";
 
 const quickLinks = [
   { to: "/", label: "Home" },
@@ -185,6 +186,10 @@ export function Footer() {
               <p className="text-sm text-gray-300">{shop!.business_hours}</p>
             </div>
           )}
+        </div>
+
+        <div className="mt-10">
+          <ThridhaSignature />
         </div>
 
         <div className="mt-10 border-t border-dark-700 pt-6">

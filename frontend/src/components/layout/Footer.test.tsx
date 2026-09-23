@@ -121,6 +121,15 @@ describe("Footer", () => {
     ).toBeInTheDocument();
   });
 
+  it("renders the creator signature", () => {
+    render(<Footer />, { wrapper: TestWrapper });
+    expect(screen.getByText("A Thridha Labs creation.")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Srinadh Chintakindi" })).toHaveAttribute(
+      "href",
+      "https://srinadhch07.vercel.app/",
+    );
+  });
+
   it("hides WhatsApp in Follow Us when whatsapp_number is empty", () => {
     render(<Footer />, {
       wrapper: ({ children }) => (
