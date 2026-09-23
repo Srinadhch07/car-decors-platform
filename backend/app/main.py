@@ -15,6 +15,7 @@ from app.core.config import Settings, get_settings
 from app.core.db import mongo
 from app.core.rate_limit import SlidingWindowLimiter
 from app.db.indexes import ensure_indexes
+from app.services.email import build_email_service
 from app.storage.base import build_storage
 
 
@@ -65,11 +66,24 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
-    # Per-process login rate limiter; transient and in-memory by design.
+    # Per-process rate limiters; transient and in-memory by design. Fresh
+    # instances for each dimension keep login spams and reset-token abuse from
+    # sharing a bucket.
     app.state.login_limiter = SlidingWindowLimiter(
         max_events=settings.login_rate_limit_max,
         window_seconds=settings.login_rate_limit_window_minutes * 60,
     )
+    app.state.forgot_password_limiter = SlidingWindowLimiter(
+        max_events=settings.forgot_password_rate_limit_max,
+        window_seconds=settings.forgot_password_rate_limit_window_minutes * 60,
+    )
+    app.state.reset_password_limiter = SlidingWindowLimiter(
+        max_events=settings.reset_password_rate_limit_max,
+        window_seconds=settings.reset_password_rate_limit_window_minutes * 60,
+    )
+
+    # Gmail SMTP delivery for password-reset emails (backend only).
+    app.state.email_service = build_email_service(settings)
 
     # Storage adapter is selected from configuration and lives on the app so
     # tests can swap in a fake without touching credentials.

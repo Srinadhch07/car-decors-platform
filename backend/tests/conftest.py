@@ -14,6 +14,7 @@ from app.models.admin_user import AdminUser
 from app.repositories.admin_users import AdminUserRepository
 from tests.support.fake_storage import MemoStorage
 from tests.support.mongomock_async import AsyncDatabase
+from tests.support.recording_email import RecordingEmailService
 
 
 @pytest.fixture
@@ -79,6 +80,24 @@ async def authed_headers(auth_client: AsyncClient, seeded_admin) -> dict[str, st
     assert response.status_code == 200
     csrf = auth_client.cookies.get(get_settings().csrf_cookie_name) or ""
     return {"X-CSRF-Token": csrf}
+
+
+@pytest.fixture
+async def account_client(
+    fake_db: AsyncDatabase,
+) -> AsyncIterator[tuple[AsyncClient, RecordingEmailService]]:
+    """Return a client wired to the fake DB with a recording email service.
+
+    A fresh app instance also means fresh rate limiters and an isolated email
+    delivery spy per test.
+    """
+    test_app = create_app()
+    test_app.dependency_overrides[get_database] = lambda: fake_db
+    recorder = RecordingEmailService()
+    test_app.state.email_service = recorder
+    transport = ASGITransport(app=test_app)
+    async with AsyncClient(transport=transport, base_url="http://testserver") as async_client:
+        yield async_client, recorder
 
 
 @pytest.fixture

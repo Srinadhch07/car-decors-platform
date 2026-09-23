@@ -6,7 +6,12 @@ from bson import ObjectId
 from fastapi import Depends, HTTPException, Request, status
 
 from app.core.config import get_settings
-from app.core.security import TokenError, decode_access_token, tokens_match
+from app.core.security import (
+    TokenError,
+    decode_access_token,
+    decode_token_version,
+    tokens_match,
+)
 from app.db.dependencies import DatabaseDep
 from app.models.admin_user import AdminUser
 from app.repositories.admin_users import AdminUserRepository
@@ -31,10 +36,13 @@ async def require_admin(request: Request, database: DatabaseDep) -> AdminUser:
         raise _unauthorized()
     try:
         admin_id = ObjectId(decode_access_token(token))
+        token_version = decode_token_version(token)
     except (TokenError, ValueError):
         raise _unauthorized() from None
     admin = await AdminUserRepository(database).get_by_id(admin_id)
     if admin is None:
+        raise _unauthorized()
+    if token_version != admin.token_version:
         raise _unauthorized()
     request.state.admin = admin
     return admin

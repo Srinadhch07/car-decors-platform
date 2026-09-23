@@ -77,6 +77,23 @@ class Settings(BaseSettings):
     login_rate_limit_max: int = 5
     login_rate_limit_window_minutes: int = 15
 
+    # Account management: password reset (Gmail SMTP, backend-only).
+    # SMTP credentials must never be exposed to the frontend or committed.
+    smtp_host: str = ""
+    smtp_port: int = 587
+    smtp_username: str = ""
+    smtp_password: str = ""
+    smtp_from_email: str = ""
+    # Base URL of the storefront; the backend builds reset links from it.
+    frontend_url: str = "http://localhost:5173"
+    # Lifetime of a single-use password-reset token (minutes).
+    password_reset_token_minutes: int = 30
+    # Forgot-password and reset-password rate limiting (per client IP).
+    forgot_password_rate_limit_max: int = 5
+    forgot_password_rate_limit_window_minutes: int = 15
+    reset_password_rate_limit_max: int = 5
+    reset_password_rate_limit_window_minutes: int = 15
+
     # Image storage. "local" is the development-safe default; "s3" activates
     # the Amazon S3 adapter which requires AWS credentials and a bucket.
     storage_mode: str = "local"

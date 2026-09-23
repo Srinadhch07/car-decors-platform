@@ -1,5 +1,6 @@
-"""Password hashing, JWT, and CSRF primitives."""
+"""Password hashing, JWT, CSRF, and password-reset token primitives."""
 
+import hashlib
 import logging
 import secrets
 from datetime import UTC, datetime, timedelta
@@ -70,19 +71,25 @@ def get_jwt_secret() -> str:
     return _dev_secret
 
 
-def create_access_token(subject: str) -> str:
-    """Sign a short-lived JWT whose ``sub`` is the admin document id."""
+def create_access_token(subject: str, version: int = 0) -> str:
+    """Sign a short-lived JWT whose ``sub`` is the admin document id.
+
+    ``version`` is the admin account's ``token_version``; it is embedded in the
+    token so that bumping the account version (after a password/email change)
+    invalidates every previously issued session.
+    """
     now = datetime.now(UTC)
     payload = {
         "sub": subject,
+        "ver": version,
         "iat": now,
         "exp": now + timedelta(minutes=get_settings().jwt_access_minutes),
     }
     return jwt.encode(payload, get_jwt_secret(), algorithm=JWT_ALGORITHM)
 
 
-def decode_access_token(token: str) -> str:
-    """Verify a JWT and return its subject; raise :class:`TokenError` otherwise."""
+def decode_access_token_claims(token: str) -> dict:
+    """Verify a JWT and return its payload; raise :class:`TokenError` otherwise."""
     try:
         payload = jwt.decode(
             token,
@@ -92,10 +99,37 @@ def decode_access_token(token: str) -> str:
         )
     except jwt.PyJWTError as exc:
         raise TokenError(str(exc)) from exc
+    return payload
+
+
+def decode_access_token(token: str) -> str:
+    """Verify a JWT and return its subject; raise :class:`TokenError` otherwise."""
+    payload = decode_access_token_claims(token)
     subject = payload.get("sub")
     if not isinstance(subject, str) or not subject:
         raise TokenError("token subject is missing")
     return subject
+
+
+def decode_token_version(token: str) -> int:
+    """Return the session version claim from a trusted token."""
+    value = decode_access_token_claims(token).get("ver", 0)
+    if not isinstance(value, int):
+        raise TokenError("token version is invalid")
+    return value
+
+
+def generate_reset_token() -> str:
+    """Return a cryptographically random, URL-safe opaque reset token."""
+    return secrets.token_urlsafe(48)
+
+
+def hash_reset_token(token: str) -> str:
+    """Return a SHA-256 hash of a raw reset token.
+
+    Only the hash is stored in MongoDB; the raw token travels solely via email.
+    """
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()
 
 
 def generate_csrf_token() -> str:
