@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { api } from "../../../lib/api/client";
+import { blockIndexing } from "../../../lib/seo";
 import type { AdminUser } from "../../../types/api";
 
 export interface AdminAuthState {
@@ -30,6 +31,11 @@ interface AdminAuthProviderProps {
 export function AdminAuthProvider({ children }: AdminAuthProviderProps) {
   const [session, setSession] = useState<AdminUser | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Admin screens must never appear in search results or social shares.
+  useEffect(() => {
+    blockIndexing();
+  }, []);
 
   // Restore an existing session cookie on first load.
   useEffect(() => {

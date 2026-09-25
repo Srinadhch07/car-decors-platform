@@ -5,6 +5,14 @@ import type { Category, ProductListPage, Subcategory } from "../../types/api";
 import { ApiRequestError, api } from "../../lib/api/client";
 import { Container, EmptyState, ErrorState } from "../../components/ui";
 import { useShopSettings } from "../../context/ShopSettingsContext";
+import { SeoHead } from "../../components/seo";
+import {
+  DEFAULT_OG_IMAGE,
+  FALLBACK_BRAND,
+  SITE_URL,
+  buildBreadcrumbs,
+  type SeoData,
+} from "../../lib/seo";
 import { ProductCard } from "../home/ProductCard";
 import { ProductSkeleton } from "../products/ProductSkeleton";
 import { Pagination } from "../products/Pagination";
@@ -15,6 +23,7 @@ interface CategoryDetailProps {
 
 export function CategoryDetail({ slug }: CategoryDetailProps) {
   const { data: shop } = useShopSettings();
+  const brand = shop?.shop_name ?? FALLBACK_BRAND;
   const [params, setParams] = useSearchParams();
 
   const subcategory = params.get("subcategory") ?? "";
@@ -26,13 +35,6 @@ export function CategoryDetail({ slug }: CategoryDetailProps) {
   const [products, setProducts] = useState<ProductListPage | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  // SEO
-  useEffect(() => {
-    if (category) {
-      document.title = `${category.name} | ${shop?.shop_name ?? "Car Decor"}`;
-    }
-  }, [category, shop]);
 
   // Fetch category
   useEffect(() => {
@@ -151,7 +153,9 @@ export function CategoryDetail({ slug }: CategoryDetailProps) {
   // --- Loading skeleton ---
   if (loading && !category && !error) {
     return (
-      <section className="section-y">
+      <>
+        <SeoHead data={{ title: `${brand} | Products` }} />
+        <section className="section-y">
         <Container>
           <div className="animate-pulse space-y-8">
             <div className="h-6 w-64 rounded bg-surface-muted" />
@@ -164,13 +168,22 @@ export function CategoryDetail({ slug }: CategoryDetailProps) {
           </div>
         </Container>
       </section>
-    );
+    </>
+  );
   }
 
   // --- Error / 404 ---
   if (error === "Category not found") {
     return (
-      <section className="section-y">
+      <>
+        <SeoHead
+          data={{
+            title: `Category Not Found | ${brand}`,
+            description: "The category you're looking for doesn't exist or has been removed.",
+            noIndex: true,
+          }}
+        />
+        <section className="section-y">
         <Container>
           <div className="py-16 text-center">
             <h1 className="mb-4 text-2xl font-bold text-text-primary">Category Not Found</h1>
@@ -187,23 +200,64 @@ export function CategoryDetail({ slug }: CategoryDetailProps) {
           </div>
         </Container>
       </section>
-    );
+    </>
+  );
   }
 
   if (error && !category) {
     return (
-      <section className="section-y">
-        <Container>
-          <ErrorState message={error} onRetry={() => window.location.reload()} />
-        </Container>
-      </section>
+      <>
+        <SeoHead data={{ title: `Something went wrong | ${brand}` }} />
+        <section className="section-y">
+          <Container>
+            <ErrorState message={error} onRetry={() => window.location.reload()} />
+          </Container>
+        </section>
+      </>
     );
   }
 
   if (!category) return null;
 
+  const categoryDescription = category.description
+    ? category.description
+    : `Browse ${category.name} at ${brand}. Shop car accessories and decor with prices, availability, and WhatsApp enquiry.`;
+
+  const jsonLd: SeoData["jsonLd"] = [
+    buildBreadcrumbs(SITE_URL, [
+      { name: "Home", path: "/" },
+      { name: "Products", path: "/products" },
+      { name: category.name, path: `/categories/${category.slug}` },
+    ]),
+    ...(products && products.items.length > 0
+      ? [
+          {
+            "@context": "https://schema.org",
+            "@type": "ItemList",
+            name: category.name,
+            itemListElement: products.items.map((product, index) => ({
+              "@type": "ListItem",
+              position: index + 1,
+              name: product.name,
+              url: `${SITE_URL}/products/${product.slug}`,
+            })),
+          },
+        ]
+      : []),
+  ];
+
+  const seo: SeoData = {
+    title: `${category.name} | ${brand}`,
+    description: categoryDescription,
+    canonicalPath: `/categories/${category.slug}`,
+    siteName: brand,
+    ogImage: category.image_url ?? DEFAULT_OG_IMAGE,
+    jsonLd,
+  };
+
   return (
     <div>
+      <SeoHead data={seo} />
       {/* Breadcrumb */}
       <section className="border-b border-border-light bg-surface-muted">
         <Container className="py-3">

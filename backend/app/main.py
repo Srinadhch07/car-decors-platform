@@ -10,7 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pymongo.errors import PyMongoError
 
-from app.api.routes import auth, catalog, health, products, shop
+from app.api.routes import auth, catalog, health, products, seo, shop
 from app.core.config import Settings, get_settings
 from app.core.db import mongo
 from app.core.rate_limit import SlidingWindowLimiter
@@ -100,6 +100,10 @@ def create_app() -> FastAPI:
     app.include_router(catalog.admin_router, prefix=settings.api_prefix)
     app.include_router(products.public_router, prefix=settings.api_prefix)
     app.include_router(products.admin_router, prefix=settings.api_prefix)
+
+    # SEO endpoints are intentionally served at the root (no /api prefix) so
+    # crawlers can reach /sitemap.xml directly.
+    app.include_router(seo.router)
 
     return app
 

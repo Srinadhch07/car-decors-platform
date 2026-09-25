@@ -41,6 +41,8 @@ git-ignored. The repo only tracks placeholder templates:
 
 - Uvicorn/FastAPI app served from `backend` (`uvicorn app.main:app`).
 - `API_PREFIX=/api`: health, readiness, auth, shop, catalog, and product routes.
+  The SEO sitemap (`/sitemap.xml`) is the deliberate exception and is served at
+  the root so crawlers never need to know about the API prefix.
 - `APP_VERSION` — set the deployed version (v1.0.0) in production.
 - `LOG_LEVEL` — `WARNING` recommended in production; the app never logs secrets
   (passwords, JWTs, cookies, API keys, or storage/database credentials are never
@@ -170,9 +172,22 @@ Admin routes: `/admin/login`, `/admin/forgot-password`, `/admin/reset-password`,
 `/admin/products/:productId/edit`, `/admin/categories`, `/admin/subcategories`,
 `/admin/shop`, `/admin/account`.
 
+### SEO (robots.txt and sitemap.xml)
+
+- `robots.txt` is a static file in `frontend/public/` and is copied verbatim into
+  the build (`frontend/dist/robots.txt`), so no server change is needed for it.
+- `sitemap.xml` is generated **dynamically** by the backend at the root path
+  (outside the `/api` prefix, in `backend/app/api/routes/seo.py`) so it always
+  reflects the currently visible catalog. The sitemap host comes from
+  `FRONTEND_URL`; update that variable if the storefront domain ever changes.
+- Because the SPA fallback returns `index.html` for unknown paths, nginx must
+  forward `sitemap.xml` to the backend explicitly (see below) — otherwise
+  crawlers receive HTML instead of XML.
+
 Example Nginx `location` blocks:
 
 ```nginx
+location = /sitemap.xml { proxy_pass http://backend:8000; }
 location /api/ { proxy_pass http://backend:8000; }
 location /media/ { proxy_pass http://backend:8000; }
 location / {
@@ -245,6 +260,9 @@ VITE_API_BASE_URL=        (empty = same-origin, or full backend URL)
 - [ ] Health check passes (`GET /api/health` → 200)
 - [ ] Readiness check passes (`GET /api/health/ready` → 200 when DB reachable)
 - [ ] SPA fallback configured for client-side routes (nginx `try_files`)
+- [ ] `location = /sitemap.xml` proxy block added so crawlers get XML, not HTML
+- [ ] `/robots.txt` reachable (static file from the frontend build)
+- [ ] `FRONTEND_URL` set to the storefront origin (used by the sitemap + reset links)
 
 ---
 

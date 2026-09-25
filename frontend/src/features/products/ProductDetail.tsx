@@ -3,10 +3,20 @@ import { Link } from "react-router-dom";
 import { ArrowLeft, MessageCircle, Phone } from "lucide-react";
 import type { Category, Product } from "../../types/api";
 import { ApiRequestError, api } from "../../lib/api/client";
-import { formatPrice, availabilityLabel } from "../../lib/utils/format";
+import { formatPrice, availabilityLabel, truncate } from "../../lib/utils/format";
 import { buildWhatsAppUrl } from "../../lib/utils/whatsapp";
 import { useShopSettings, hasContent } from "../../context/ShopSettingsContext";
 import { Badge, Container } from "../../components/ui";
+import { SeoHead } from "../../components/seo";
+import {
+  DEFAULT_OG_IMAGE,
+  FALLBACK_BRAND,
+  SITE_URL,
+  absoluteUrl,
+  availabilitySchemaValue,
+  buildBreadcrumbs,
+  type SeoData,
+} from "../../lib/seo";
 
 interface ProductDetailProps {
   slug: string;
@@ -56,33 +66,31 @@ export function ProductDetail({ slug }: ProductDetailProps) {
     };
   }, [slug]);
 
-  // SEO
-  useEffect(() => {
-    if (product) {
-      document.title = `${product.name} | ${shop?.shop_name ?? "Car Decor"}`;
-    }
-  }, [product, shop]);
+  const brand = shop?.shop_name ?? FALLBACK_BRAND;
 
   // --- Loading skeleton ---
   if (loading) {
     return (
-      <section className="section-y">
-        <Container>
-          <div className="animate-pulse">
-            <div className="mb-6 h-4 w-48 rounded bg-surface-muted" />
-            <div className="grid gap-8 md:grid-cols-2">
-              <div className="aspect-square rounded-lg bg-surface-muted" />
-              <div className="space-y-4">
-                <div className="h-8 w-3/4 rounded bg-surface-muted" />
-                <div className="h-6 w-1/3 rounded bg-surface-muted" />
-                <div className="h-4 w-full rounded bg-surface-muted" />
-                <div className="h-4 w-5/6 rounded bg-surface-muted" />
-                <div className="h-12 w-full rounded bg-surface-muted" />
+      <>
+        <SeoHead data={{ title: `${brand} | Products` }} />
+        <section className="section-y">
+          <Container>
+            <div className="animate-pulse">
+              <div className="mb-6 h-4 w-48 rounded bg-surface-muted" />
+              <div className="grid gap-8 md:grid-cols-2">
+                <div className="aspect-square rounded-lg bg-surface-muted" />
+                <div className="space-y-4">
+                  <div className="h-8 w-3/4 rounded bg-surface-muted" />
+                  <div className="h-6 w-1/3 rounded bg-surface-muted" />
+                  <div className="h-4 w-full rounded bg-surface-muted" />
+                  <div className="h-4 w-5/6 rounded bg-surface-muted" />
+                  <div className="h-12 w-full rounded bg-surface-muted" />
+                </div>
               </div>
             </div>
-          </div>
-        </Container>
-      </section>
+          </Container>
+        </section>
+      </>
     );
   }
 
@@ -90,23 +98,35 @@ export function ProductDetail({ slug }: ProductDetailProps) {
   if (error) {
     const is404 = error === "Product not found";
     return (
-      <section className="section-y">
-        <Container>
-          <div className="py-16 text-center">
-            <h1 className="mb-4 text-2xl font-bold text-text-primary">
-              {is404 ? "Product Not Found" : "Something went wrong"}
-            </h1>
-            <p className="mb-6 text-text-secondary">{error}</p>
-            <Link
-              to="/products"
-              className="inline-flex items-center gap-2 text-sm font-medium text-orange-600 hover:text-orange-700"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back to Products
-            </Link>
-          </div>
-        </Container>
-      </section>
+      <>
+        <SeoHead
+          data={{
+            title: `${is404 ? "Product Not Found" : "Something went wrong"} | ${brand}`,
+            description: is404
+              ? "The product you're looking for doesn't exist or has been removed."
+              : error,
+            canonicalPath: "/products",
+            noIndex: is404,
+          }}
+        />
+        <section className="section-y">
+          <Container>
+            <div className="py-16 text-center">
+              <h1 className="mb-4 text-2xl font-bold text-text-primary">
+                {is404 ? "Product Not Found" : "Something went wrong"}
+              </h1>
+              <p className="mb-6 text-text-secondary">{error}</p>
+              <Link
+                to="/products"
+                className="inline-flex items-center gap-2 text-sm font-medium text-orange-600 hover:text-orange-700"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Back to Products
+              </Link>
+            </div>
+          </Container>
+        </section>
+      </>
     );
   }
 
@@ -124,8 +144,54 @@ export function ProductDetail({ slug }: ProductDetailProps) {
       ? buildWhatsAppUrl(shop.whatsapp_number, product.name, product.vehicle_tags[0])
       : null;
 
+  const productUrl = `${SITE_URL}/products/${product.slug}`;
+  const productDescription = product.description
+    ? truncate(product.description, 158)
+    : `Browse ${product.name} at ${brand}. Get price and availability on WhatsApp.`;
+
+  const jsonLd: SeoData["jsonLd"] = [
+    (() => {
+      const schema: Record<string, unknown> = {
+        "@context": "https://schema.org",
+        "@type": "Product",
+        name: product.name,
+        sku: product.slug,
+        url: productUrl,
+      };
+      if (product.image_url) schema.image = absoluteUrl(product.image_url);
+      if (product.description) schema.description = product.description;
+      if (product.price) {
+        schema.offers = {
+          "@type": "Offer",
+          price: product.price,
+          priceCurrency: "INR",
+          url: productUrl,
+          availability: availabilitySchemaValue(product.availability),
+        };
+      }
+      return schema;
+    })(),
+    buildBreadcrumbs(SITE_URL, [
+      { name: "Home", path: "/" },
+      { name: "Products", path: "/products" },
+      ...(category ? [{ name: category.name, path: `/categories/${category.slug}` }] : []),
+      { name: product.name, path: `/products/${product.slug}` },
+    ]),
+  ];
+
+  const seo: SeoData = {
+    title: `${product.name} | ${brand}`,
+    description: productDescription,
+    canonicalPath: `/products/${product.slug}`,
+    siteName: brand,
+    ogType: "product",
+    ogImage: product.image_url ?? DEFAULT_OG_IMAGE,
+    jsonLd,
+  };
+
   return (
     <div>
+      <SeoHead data={seo} />
       {/* Breadcrumb */}
       <section className="border-b border-border-light bg-surface-muted">
         <Container className="py-3">

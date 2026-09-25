@@ -5,6 +5,8 @@ import type { Category, ProductAvailability, ProductListPage, Subcategory } from
 import { api } from "../../lib/api/client";
 import { Container, SectionHeading, EmptyState, ErrorState } from "../../components/ui";
 import { useShopSettings } from "../../context/ShopSettingsContext";
+import { DEFAULT_OG_IMAGE, FALLBACK_BRAND, type SeoData } from "../../lib/seo";
+import { SeoHead } from "../../components/seo";
 import { ProductCard } from "../home/ProductCard";
 import { ProductSkeleton } from "./ProductSkeleton";
 import { Pagination } from "./Pagination";
@@ -48,11 +50,17 @@ export function ProductsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // SEO
-  useEffect(() => {
-    const name = shop?.shop_name ?? "Car Decor";
-    document.title = `Products | ${name}`;
-  }, [shop]);
+  // SEO: unique title/description, canonical points at the clean /products URL
+  const seo: SeoData = useMemo(
+    () => ({
+      title: `${shop?.shop_name ?? FALLBACK_BRAND} | Products`,
+      description: `Browse all car accessories and car decor from ${shop?.shop_name ?? FALLBACK_BRAND}. Filter by category, availability and price, and get in touch on WhatsApp.`,
+      canonicalPath: "/products",
+      siteName: shop?.shop_name ?? FALLBACK_BRAND,
+      ogImage: DEFAULT_OG_IMAGE,
+    }),
+    [shop],
+  );
 
   // Load categories on mount
   useEffect(() => {
@@ -290,6 +298,7 @@ export function ProductsPage() {
 
   return (
     <div>
+      <SeoHead data={seo} />
       {/* Header */}
       <section className="border-b border-border-light bg-surface-muted">
         <Container className="py-8 sm:py-10">
