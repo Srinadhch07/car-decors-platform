@@ -55,6 +55,7 @@ describe("AdminShell", () => {
     expect(within(nav).getByRole("link", { name: /^products$/i })).toBeInTheDocument();
     expect(within(nav).getByRole("link", { name: /^categories$/i })).toBeInTheDocument();
     expect(within(nav).getByRole("link", { name: /^subcategories$/i })).toBeInTheDocument();
+    expect(within(nav).getByRole("link", { name: /^testimonials$/i })).toBeInTheDocument();
     expect(within(nav).getByRole("link", { name: /^shop settings$/i })).toBeInTheDocument();
     expect(within(nav).getByRole("link", { name: /^account$/i })).toBeInTheDocument();
     expect(await screen.findByText(adminUser.email)).toBeInTheDocument();
@@ -137,6 +138,10 @@ describe("AdminShell", () => {
     expect(within(drawerNav).getByRole("link", { name: /^subcategories$/i })).toHaveAttribute(
       "href",
       "/admin/subcategories",
+    );
+    expect(within(drawerNav).getByRole("link", { name: /^testimonials$/i })).toHaveAttribute(
+      "href",
+      "/admin/testimonials",
     );
     expect(within(drawerNav).getByRole("link", { name: /^shop settings$/i })).toHaveAttribute(
       "href",

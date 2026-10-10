@@ -5,8 +5,8 @@ import { setupServer } from "msw/node";
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import { TestWrapper } from "../../../test-utils";
 import type {
+  AdminProduct,
   Category,
-  Product,
   ProductAdminListPage,
   ProductAvailability,
   Subcategory,
@@ -24,7 +24,7 @@ const mockSubcategories: Subcategory[] = [
   { id: "sub-1", category_id: "cat-1", name: "Premium", slug: "premium", image_url: null, sort_order: 0, is_active: true },
 ];
 
-function makeProduct(overrides: Partial<Product> = {}): Product {
+function makeProduct(overrides: Partial<AdminProduct> = {}): AdminProduct {
   return {
     id: "prod-1",
     category_id: "cat-1",
@@ -34,21 +34,24 @@ function makeProduct(overrides: Partial<Product> = {}): Product {
     description: "Premium leather",
     price: "2999",
     availability: "IN_STOCK",
+    stock_quantity: 0,
     is_active: true,
     vehicle_tags: ["Swift", "City"],
     image_url: null,
+    external_url: null,
     created_at: "2024-01-01T00:00:00Z",
     updated_at: "2024-01-01T00:00:00Z",
     ...overrides,
   };
 }
 
-let mockProducts: Product[] = [
+let mockProducts: AdminProduct[] = [
   makeProduct({
     id: "prod-1",
     name: "Leather Seat Cover",
     price: "2999",
     availability: "IN_STOCK",
+    stock_quantity: 5,
     is_active: true,
   }),
   makeProduct({
@@ -59,11 +62,12 @@ let mockProducts: Product[] = [
     subcategory_id: null,
     price: null,
     availability: "ON_ORDER",
+    stock_quantity: 0,
     is_active: false,
   }),
 ];
 
-function listPage(items: Product[], page = 1, total?: number): ProductAdminListPage {
+function listPage(items: AdminProduct[], page = 1, total?: number): ProductAdminListPage {
   return {
     items,
     page,
@@ -91,13 +95,33 @@ const handlers = [
     const index = mockProducts.findIndex((p) => p.id === id);
     const current = mockProducts[index];
     if (!current) return new HttpResponse(null, { status: 404 });
-    const next: Product = { ...current };
+    const next: AdminProduct = { ...current };
     if (form.has("availability")) {
       next.availability = String(form.get("availability")) as ProductAvailability;
     }
     if (form.has("is_active")) {
       next.is_active = form.get("is_active") === "true";
     }
+    if (form.has("stock_quantity")) {
+      next.stock_quantity = Number(form.get("stock_quantity"));
+    }
+    mockProducts[index] = next;
+    return HttpResponse.json(next);
+  }),
+  http.patch("*/api/admin/products/:id/stock", async ({ params, request }) => {
+    const id = String(params.id);
+    const index = mockProducts.findIndex((p) => p.id === id);
+    const current = mockProducts[index];
+    if (!current) return new HttpResponse(null, { status: 404 });
+    const body = (await request.json()) as { delta?: number };
+    const delta = body.delta ?? 1;
+    if (delta < 0 && current.stock_quantity <= 0) {
+      return HttpResponse.json(
+        { detail: "Cannot decrement stock below zero" },
+        { status: 409 },
+      );
+    }
+    const next: AdminProduct = { ...current, stock_quantity: current.stock_quantity + delta };
     mockProducts[index] = next;
     return HttpResponse.json(next);
   }),
@@ -122,6 +146,7 @@ afterEach(() => {
       name: "Leather Seat Cover",
       price: "2999",
       availability: "IN_STOCK",
+      stock_quantity: 5,
       is_active: true,
     }),
     makeProduct({
@@ -132,6 +157,7 @@ afterEach(() => {
       subcategory_id: null,
       price: null,
       availability: "ON_ORDER",
+      stock_quantity: 0,
       is_active: false,
     }),
   ];
@@ -451,7 +477,7 @@ describe("ProductsAdminPage", () => {
         const form = await request.formData();
         sentAvailability = String(form.get("availability"));
         const current = mockProducts.find((p) => p.id === id)!;
-        const next: Product = { ...current, availability: sentAvailability as ProductAvailability };
+        const next: AdminProduct = { ...current, availability: sentAvailability as ProductAvailability };
         mockProducts = mockProducts.map((p) => (p.id === id ? next : p));
         return HttpResponse.json(next);
       }),
@@ -507,6 +533,95 @@ describe("ProductsAdminPage", () => {
     renderPage();
     await screen.findByText("Leather Seat Cover");
     expect(await screen.findByText("2 products")).toBeInTheDocument();
+  });
+
+  it("renders the stock quantity with inline adjust buttons", async () => {
+    renderPage();
+    await screen.findByText("Leather Seat Cover");
+    expect(screen.getByLabelText("Stock quantity for Leather Seat Cover")).toHaveTextContent("5");
+    expect(
+      screen.getByRole("button", { name: "Increase stock for Leather Seat Cover" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Decrease stock for Leather Seat Cover" }),
+    ).toBeInTheDocument();
+  });
+
+  it("increments stock via PATCH and updates the row", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await screen.findByText("Leather Seat Cover");
+
+    await user.click(screen.getByRole("button", { name: "Increase stock for Leather Seat Cover" }));
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("Stock quantity for Leather Seat Cover")).toHaveTextContent("6");
+    });
+  });
+
+  it("decrements stock via PATCH and updates the row", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await screen.findByText("Leather Seat Cover");
+
+    await user.click(screen.getByRole("button", { name: "Decrease stock for Leather Seat Cover" }));
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("Stock quantity for Leather Seat Cover")).toHaveTextContent("4");
+    });
+  });
+
+  it("disables decrement when stock is zero", async () => {
+    renderPage();
+    await screen.findByText("Rubber Floor Mat");
+    expect(
+      screen.getByRole("button", { name: "Decrease stock for Rubber Floor Mat" }),
+    ).toBeDisabled();
+    expect(
+      screen.getByRole("button", { name: "Increase stock for Rubber Floor Mat" }),
+    ).toBeEnabled();
+  });
+
+  it("surfaces an error when a stock adjustment fails", async () => {
+    server.use(
+      http.patch("*/api/admin/products/:id/stock", () =>
+        HttpResponse.json({ detail: "Cannot decrement stock below zero" }, { status: 409 }),
+      ),
+    );
+    const user = userEvent.setup();
+    renderPage();
+    await screen.findByText("Leather Seat Cover");
+
+    await user.click(screen.getByRole("button", { name: "Decrease stock for Leather Seat Cover" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Cannot decrement stock below zero",
+    );
+    expect(screen.getByLabelText("Stock quantity for Leather Seat Cover")).toHaveTextContent("5");
+  });
+
+  it("sends the requested delta to the stock endpoint", async () => {
+    let sentDelta: number | null = null;
+    server.use(
+      http.patch("*/api/admin/products/:id/stock", async ({ params, request }) => {
+        const id = String(params.id);
+        const body = (await request.json()) as { delta: number };
+        sentDelta = body.delta;
+        const current = mockProducts.find((p) => p.id === id)!;
+        const next: AdminProduct = { ...current, stock_quantity: current.stock_quantity + body.delta };
+        mockProducts = mockProducts.map((p) => (p.id === id ? next : p));
+        return HttpResponse.json(next);
+      }),
+    );
+    const user = userEvent.setup();
+    renderPage();
+    await screen.findByText("Leather Seat Cover");
+
+    await user.click(screen.getByRole("button", { name: "Increase stock for Leather Seat Cover" }));
+
+    await waitFor(() => {
+      expect(sentDelta).toBe(1);
+    });
   });
 });
 

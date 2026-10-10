@@ -16,7 +16,15 @@ from pymongo.errors import DuplicateKeyError
 
 from app.core.slugs import find_available_slug, slugify
 from app.models.enums import Availability
-from app.models.product import Product, ProductCreate, ProductListPage, ProductRead, ProductUpdate
+from app.models.product import (
+    AdminProductListPage,
+    AdminProductRead,
+    Product,
+    ProductCreate,
+    ProductListPage,
+    ProductRead,
+    ProductUpdate,
+)
 from app.repositories.categories import CategoryRepository
 from app.repositories.products import ProductRepository
 from app.repositories.subcategories import SubcategoryRepository
@@ -60,6 +68,10 @@ class InvalidQueryError(ProductError):
 
 def _read_product(product: Product) -> ProductRead:
     return ProductRead.model_validate(product)
+
+
+def _read_admin_product(product: Product) -> AdminProductRead:
+    return AdminProductRead.model_validate(product)
 
 
 async def _require_valid_category(database: AsyncDatabase, category_id: ObjectId) -> None:
@@ -128,6 +140,18 @@ def _build_page(items: list[Product], total: int, *, page: int, page_size: int) 
     )
 
 
+def _build_admin_page(
+    items: list[Product], total: int, *, page: int, page_size: int
+) -> AdminProductListPage:
+    return AdminProductListPage(
+        items=[_read_admin_product(product) for product in items],
+        page=page,
+        page_size=page_size,
+        total=total,
+        total_pages=_total_pages(total, page_size),
+    )
+
+
 async def _resolve_page(
     database: AsyncDatabase,
     query: dict[str, Any],
@@ -135,7 +159,8 @@ async def _resolve_page(
     sort: str,
     page: int,
     page_size: int,
-) -> ProductListPage:
+    admin: bool = False,
+) -> ProductListPage | AdminProductListPage:
     if sort not in SORT_KEYS:
         raise InvalidQueryError(f"sort must be one of: {', '.join(sorted(SORT_KEYS))}")
     skip, resolved_page, resolved_size = _validate_pagination(page, page_size)
@@ -157,7 +182,16 @@ async def _resolve_page(
         items = await repository.page_query(
             query, sort_keys=SORT_KEYS[sort], skip=skip, limit=resolved_size
         )
+    if admin:
+        return _build_admin_page(
+            items, total, page=resolved_page, page_size=resolved_size
+        )
     return _build_page(items, total, page=resolved_page, page_size=resolved_size)
+
+
+def _empty_admin_page(page: int, page_size: int) -> AdminProductListPage:
+    _, resolved_page, resolved_size = _validate_pagination(page, page_size)
+    return _build_admin_page([], 0, page=resolved_page, page_size=resolved_size)
 
 
 # ---------------------------------------------------------------------------
@@ -202,6 +236,8 @@ async def create_product(
         description=payload.description,
         price=payload.price,
         availability=payload.availability,
+        stock_quantity=payload.stock_quantity,
+        external_url=payload.external_url,
         is_active=payload.is_active,
         vehicle_tags=payload.vehicle_tags,
         image_url=image_url,
@@ -218,7 +254,7 @@ async def create_product(
         if image_key is not None:
             await _safe_cleanup(storage, image_key)
         raise
-    return _read_product(created)
+    return _read_admin_product(created)
 
 
 async def update_product(
@@ -282,7 +318,33 @@ async def update_product(
     updated = await repository.get_by_id(existing.id)
     if updated is None:  # pragma: no cover - defensive
         raise NotFoundError("Product not found")
-    return _read_product(updated)
+    return _read_admin_product(updated)
+
+
+async def adjust_product_stock(
+    database: AsyncDatabase, product_id: ObjectId, delta: int
+) -> AdminProductRead:
+    """Atomically adjust a product's stock quantity by ``delta``.
+
+    Only single-unit adjustments (+1/-1) are allowed. The write uses a
+    concurrency-safe guarded ``$inc``; two concurrent adjustments are never
+    lost. Decrements cannot take stock below zero, and the returned document
+    is re-read after the write so the API never reports an unsaved value.
+    """
+    if delta not in (-1, 1):
+        raise InvalidQueryError("delta must be 1 or -1")
+
+    repository = ProductRepository(database)
+    matched = await repository.adjust_stock(product_id, delta)
+    if matched == 0:
+        if await repository.get_by_id(product_id) is None:
+            raise NotFoundError("Product not found")
+        raise ConflictError("Cannot decrement stock below zero")
+
+    updated = await repository.get_by_id(product_id)
+    if updated is None:  # pragma: no cover - defensive
+        raise NotFoundError("Product not found")
+    return _read_admin_product(updated)
 
 
 async def delete_product(database: AsyncDatabase, storage: Storage, product_id: ObjectId) -> None:
@@ -357,8 +419,8 @@ async def list_admin_products(
     sort: str = "newest",
     page: int = 1,
     page_size: int = DEFAULT_PAGE_SIZE,
-) -> ProductListPage:
-    """Full product view for the admin, including inactive rows."""
+) -> AdminProductListPage:
+    """Full product view for the admin, including inactive rows and stock."""
     query: dict[str, Any] = {}
     conditions: list[dict[str, Any]] = []
 
@@ -368,7 +430,7 @@ async def list_admin_products(
             database, category_slug, exclude_inactive=False
         )
         if not category_scope:
-            return _empty_page(page, page_size)
+            return _empty_admin_page(page, page_size)
         query["category_id"] = {"$in": category_scope}
 
     if subcategory_slug:
@@ -376,7 +438,7 @@ async def list_admin_products(
             database, subcategory_slug, category_scope
         )
         if not subcategory_ids:
-            return _empty_page(page, page_size)
+            return _empty_admin_page(page, page_size)
         query["subcategory_id"] = {"$in": subcategory_ids}
 
     if availability is not None:
@@ -388,7 +450,9 @@ async def list_admin_products(
         conditions.append(_search_condition(search))
     if conditions:
         query["$and"] = conditions
-    return await _resolve_page(database, query, sort=sort, page=page, page_size=page_size)
+    return await _resolve_page(
+        database, query, sort=sort, page=page, page_size=page_size, admin=True
+    )
 
 
 async def list_public_products(
@@ -470,11 +534,11 @@ def _empty_page(page: int, page_size: int) -> ProductListPage:
     return _build_page([], 0, page=resolved_page, page_size=resolved_size)
 
 
-async def get_admin_product(database: AsyncDatabase, product_id: ObjectId) -> ProductRead:
+async def get_admin_product(database: AsyncDatabase, product_id: ObjectId) -> AdminProductRead:
     product = await ProductRepository(database).get_by_id(product_id)
     if product is None:
         raise NotFoundError("Product not found")
-    return _read_product(product)
+    return _read_admin_product(product)
 
 
 async def get_public_product(database: AsyncDatabase, slug: str) -> ProductRead:
@@ -502,6 +566,7 @@ __all__ = [
     "NotFoundError",
     "ProductError",
     "SORT_KEYS",
+    "adjust_product_stock",
     "create_product",
     "delete_product",
     "get_admin_product",

@@ -94,6 +94,10 @@ class Settings(BaseSettings):
     reset_password_rate_limit_max: int = 5
     reset_password_rate_limit_window_minutes: int = 15
 
+    # Customer testimonial submission rate limiting (per client IP).
+    testimonial_submit_rate_limit_max: int = 10
+    testimonial_submit_rate_limit_window_minutes: int = 15
+
     # Image storage. "local" is the development-safe default; "s3" activates
     # the Amazon S3 adapter which requires AWS credentials and a bucket.
     storage_mode: str = "local"

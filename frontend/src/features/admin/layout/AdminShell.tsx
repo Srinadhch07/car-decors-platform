@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate, NavLink, Outlet, useNavigate } from "react-router-dom";
-import { Car, Layers, LayoutDashboard, LogOut, Menu, Package, ShieldCheck, Store, Tags, UserCircle, X } from "lucide-react";
+import { Car, Layers, LayoutDashboard, LogOut, Menu, MessageSquareQuote, Package, ShieldCheck, Store, Tags, UserCircle, X } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useAdminAuth } from "../auth/AdminAuthContext";
 import { ThridhaSignature } from "../../../components/common/ThridhaSignature";
@@ -18,6 +18,7 @@ const NAV_ITEMS: NavItem[] = [
   { to: "/admin/products", label: "Products", icon: Package },
   { to: "/admin/categories", label: "Categories", icon: Tags },
   { to: "/admin/subcategories", label: "Subcategories", icon: Layers },
+  { to: "/admin/testimonials", label: "Testimonials", icon: MessageSquareQuote },
   { to: "/admin/shop", label: "Shop Settings", icon: Store },
   { to: "/admin/account", label: "Account", icon: UserCircle },
 ];

@@ -10,6 +10,7 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from app.core.validation import is_http_url
 from app.models.base import SLUG_PATTERN, BaseDocument, Money, PyObjectId
 from app.models.enums import Availability
 
@@ -20,6 +21,28 @@ MAX_PRODUCT_DESCRIPTION_LENGTH = 2000
 MAX_PRODUCT_TAGS = 12
 MAX_PRODUCT_TAG_LENGTH = 60
 MAX_IMAGE_URL_LENGTH = 500
+MAX_EXTERNAL_URL_LENGTH = 500
+
+
+def _normalize_external_url(value: object) -> object:
+    """Return a validated external URL, ``None`` for blank, else raise.
+
+    Only absolute http(s) URLs with a host are accepted so unsafe schemes such
+    as ``javascript:`` / ``data:``, malformed values, and control characters
+    are rejected.
+    """
+    if value is None:
+        return None
+    if not isinstance(value, str):
+        raise ValueError("external_url must be a string")
+    cleaned = value.strip()
+    if not cleaned:
+        return None
+    if any(ord(char) < 32 for char in cleaned):
+        raise ValueError("external_url contains control characters")
+    if not is_http_url(cleaned):
+        raise ValueError("external_url must be an absolute http(s) URL")
+    return cleaned
 
 
 def _clean_name(value: str) -> str:
@@ -61,10 +84,20 @@ class Product(BaseDocument):
     description: str = Field(default="", max_length=MAX_PRODUCT_DESCRIPTION_LENGTH)
     price: Money | None = None
     availability: Availability = Availability.OUT_OF_STOCK
+    #: Exact stock quantity (admin-only); legacy products without this field
+    #: are treated as having zero stock.
+    stock_quantity: int = Field(default=0, ge=0)
+    #: Optional external URL (video, product page, ...); http(s) only.
+    external_url: str | None = Field(default=None, max_length=MAX_EXTERNAL_URL_LENGTH)
     is_active: bool = True
     vehicle_tags: list[str] = Field(default_factory=list, max_length=MAX_PRODUCT_TAGS)
     #: Single public image URL; file storage is handled by the storage adapter.
     image_url: str | None = Field(default=None, max_length=MAX_IMAGE_URL_LENGTH)
+
+    @field_validator("external_url", mode="before")
+    @classmethod
+    def _validate_external_url(cls, value: object) -> object:
+        return _normalize_external_url(value)
 
     @field_validator("name", mode="before")
     @classmethod
@@ -103,8 +136,15 @@ class ProductCreate(BaseModel):
     description: str = Field(default="", max_length=MAX_PRODUCT_DESCRIPTION_LENGTH)
     price: Money | None = None
     availability: Availability = Availability.OUT_OF_STOCK
+    stock_quantity: int = Field(default=0, ge=0)
+    external_url: str | None = Field(default=None, max_length=MAX_EXTERNAL_URL_LENGTH)
     is_active: bool = True
     vehicle_tags: list[str] = Field(default_factory=list, max_length=MAX_PRODUCT_TAGS)
+
+    @field_validator("external_url", mode="before")
+    @classmethod
+    def _validate_external_url(cls, value: object) -> object:
+        return _normalize_external_url(value)
 
     @field_validator("name", mode="before")
     @classmethod
@@ -143,8 +183,15 @@ class ProductUpdate(BaseModel):
     description: str | None = Field(default=None, max_length=MAX_PRODUCT_DESCRIPTION_LENGTH)
     price: Money | None = None
     availability: Availability | None = None
+    stock_quantity: int | None = Field(default=None, ge=0)
+    external_url: str | None = Field(default=None, max_length=MAX_EXTERNAL_URL_LENGTH)
     is_active: bool | None = None
     vehicle_tags: list[str] | None = None
+
+    @field_validator("external_url", mode="before")
+    @classmethod
+    def _validate_external_url(cls, value: object) -> object:
+        return _normalize_external_url(value)
 
     @field_validator("name", mode="before")
     @classmethod
@@ -204,6 +251,23 @@ def _as_optional(raw: str | None) -> Any | None:
     return raw
 
 
+def _parse_stock(raw: str | None) -> int:
+    """Parse a ``stock_quantity`` multipart field into a non-negative integer.
+
+    Missing/blank values become zero so new products default to zero stock;
+    anything that is not a whole number is rejected.
+    """
+    if raw is None or raw == "":
+        return 0
+    try:
+        value = int(str(raw).strip())
+    except (TypeError, ValueError):
+        raise ValueError("stock_quantity must be a non-negative integer") from None
+    if value < 0:
+        raise ValueError("stock_quantity must be a non-negative integer")
+    return value
+
+
 def build_product_create(raw: dict[str, str | None]) -> ProductCreate:
     """Normalize raw multipart form values into a validated create payload.
 
@@ -217,6 +281,8 @@ def build_product_create(raw: dict[str, str | None]) -> ProductCreate:
         description=(raw.get("description") or "").strip(),
         price=_as_optional(raw.get("price")),
         availability=raw.get("availability") or Availability.OUT_OF_STOCK.value,
+        stock_quantity=_parse_stock(raw.get("stock_quantity")),
+        external_url=raw.get("external_url"),
         is_active=_coerce_bool(raw.get("is_active")),
         vehicle_tags=_parse_tags(raw.get("vehicle_tags")),
     )
@@ -226,8 +292,9 @@ def build_product_update(raw: dict[str, str | None]) -> ProductUpdate:
     """Normalize raw multipart form values into a validated update payload.
 
     Present-but-empty fields mean "clear": an empty ``subcategory_id`` detaches
-    the subcategory, empty ``price`` clears the price, and an empty
-    ``vehicle_tags`` empties the tag list. Absent fields are left unchanged.
+    the subcategory, empty ``price`` clears the price, an empty ``external_url``
+    clears the link, and an empty ``vehicle_tags`` empties the tag list. Absent
+    fields are left unchanged.
 
     Because FastAPI's ``Form()`` converts empty strings to ``None`` for optional
     string fields, the client uses a ``clear_fields`` comma-separated list to
@@ -241,7 +308,7 @@ def build_product_update(raw: dict[str, str | None]) -> ProductUpdate:
         value = raw.get(key)
         if value is not None:
             changes[key] = value
-    for key in ("price", "subcategory_id"):
+    for key in ("price", "subcategory_id", "external_url"):
         if key in clear_fields:
             changes[key] = None
         else:
@@ -251,6 +318,9 @@ def build_product_update(raw: dict[str, str | None]) -> ProductUpdate:
     availability = raw.get("availability")
     if availability not in (None, ""):
         changes["availability"] = availability
+    stock_raw = raw.get("stock_quantity")
+    if stock_raw is not None and stock_raw != "":
+        changes["stock_quantity"] = _parse_stock(stock_raw)
     is_active = raw.get("is_active")
     if is_active is not None and is_active != "":
         changes["is_active"] = _coerce_bool(is_active)
@@ -273,6 +343,7 @@ class ProductRead(BaseModel):
     description: str = ""
     price: Money | None = None
     availability: Availability = Availability.OUT_OF_STOCK
+    external_url: str | None = None
     is_active: bool = True
     vehicle_tags: list[str] = Field(default_factory=list)
     image_url: str | None = None
@@ -290,18 +361,44 @@ class ProductListPage(BaseModel):
     total_pages: int
 
 
+class AdminProductRead(ProductRead):
+    """Admin product view; adds the exact (admin-only) stock quantity."""
+
+    stock_quantity: int = 0
+
+
+class AdminProductListPage(BaseModel):
+    """Paginated admin listing whose items carry exact stock quantities."""
+
+    items: list[AdminProductRead]
+    page: int
+    page_size: int
+    total: int
+    total_pages: int
+
+
+class StockAdjustRequest(BaseModel):
+    """Body for the atomic admin stock adjustment endpoint."""
+
+    delta: int = Field(1, description="+1 to add one unit, -1 to remove one unit")
+
+
 __all__ = [
+    "MAX_EXTERNAL_URL_LENGTH",
     "MAX_IMAGE_URL_LENGTH",
     "MAX_PRODUCT_DESCRIPTION_LENGTH",
     "MAX_PRODUCT_NAME_LENGTH",
     "MAX_PRODUCT_SLUG_LENGTH",
     "MAX_PRODUCT_TAG_LENGTH",
     "MAX_PRODUCT_TAGS",
+    "AdminProductListPage",
+    "AdminProductRead",
     "Product",
     "ProductCreate",
     "ProductListPage",
     "ProductRead",
     "ProductUpdate",
+    "StockAdjustRequest",
     "build_product_create",
     "build_product_update",
 ]

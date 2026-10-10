@@ -4,7 +4,7 @@ import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import { TestWrapper } from "../../../test-utils";
-import type { Category, Product, Subcategory } from "../../../types/api";
+import type { AdminProduct, Category, Subcategory } from "../../../types/api";
 import { ProductForm } from "./ProductForm";
 
 // URL.createObjectURL is unreliable in the jsdom test environment; override it.
@@ -30,7 +30,7 @@ const mockSubcategories: Subcategory[] = [
   { id: "sub-1", category_id: "cat-1", name: "Premium", slug: "premium", image_url: null, sort_order: 0, is_active: true },
 ];
 
-function makeProduct(overrides: Partial<Product> = {}): Product {
+function makeProduct(overrides: Partial<AdminProduct> = {}): AdminProduct {
   return {
     id: "prod-1",
     category_id: "cat-1",
@@ -40,9 +40,11 @@ function makeProduct(overrides: Partial<Product> = {}): Product {
     description: "Premium leather",
     price: "2999",
     availability: "IN_STOCK",
+    stock_quantity: 0,
     is_active: true,
     vehicle_tags: ["Swift", "City"],
     image_url: null,
+    external_url: "https://youtu.be/abc123",
     created_at: "2024-01-01T00:00:00Z",
     updated_at: "2024-01-01T00:00:00Z",
     ...overrides,
@@ -95,7 +97,7 @@ afterEach(() => {
 afterAll(() => server.close());
 
 function renderForm(
-  props: { productId?: string; onSaved?: (product: Product) => void } = {},
+  props: { productId?: string; onSaved?: (product: AdminProduct) => void } = {},
 ) {
   const onSaved = props.onSaved ?? (() => {});
   return render(
@@ -223,6 +225,107 @@ describe("ProductForm create mode", () => {
     expect(lastPostForm!.has("price")).toBe(false);
   });
 
+  it("defaults the stock quantity to 0", async () => {
+    const user = userEvent.setup();
+    renderForm();
+    await waitForCategoriesLoaded();
+
+    expect(screen.getByLabelText(/stock quantity/i)).toHaveValue("0");
+
+    await user.type(screen.getByLabelText(/product name/i), "Leather Seat Cover");
+    await user.selectOptions(categorySelect(), "cat-1");
+    await user.click(screen.getByRole("button", { name: /create product/i }));
+
+    await waitFor(() => {
+      expect(lastPostForm).not.toBeNull();
+    });
+    expect(lastPostForm!.get("stock_quantity")).toBe("0");
+  });
+
+  it("submits the entered stock quantity", async () => {
+    const user = userEvent.setup();
+    renderForm();
+    await waitForCategoriesLoaded();
+
+    await user.type(screen.getByLabelText(/product name/i), "Leather Seat Cover");
+    await user.selectOptions(categorySelect(), "cat-1");
+    await user.clear(screen.getByLabelText(/stock quantity/i));
+    await user.type(screen.getByLabelText(/stock quantity/i), "12");
+    await user.click(screen.getByRole("button", { name: /create product/i }));
+
+    await waitFor(() => {
+      expect(lastPostForm).not.toBeNull();
+    });
+    expect(lastPostForm!.get("stock_quantity")).toBe("12");
+  });
+
+  it("sends the external link in the create payload", async () => {
+    const user = userEvent.setup();
+    renderForm();
+    await waitForCategoriesLoaded();
+
+    await user.type(screen.getByLabelText(/product name/i), "Leather Seat Cover");
+    await user.selectOptions(categorySelect(), "cat-1");
+    await user.type(
+      screen.getByLabelText(/external link/i),
+      "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    );
+    await user.click(screen.getByRole("button", { name: /create product/i }));
+
+    await waitFor(() => {
+      expect(lastPostForm).not.toBeNull();
+    });
+    expect(lastPostForm!.get("external_url")).toBe("https://www.youtube.com/watch?v=dQw4w9WgXcQ");
+  });
+
+  it("omits the external link field when left blank", async () => {
+    const user = userEvent.setup();
+    renderForm();
+    await waitForCategoriesLoaded();
+
+    await user.type(screen.getByLabelText(/product name/i), "Leather Seat Cover");
+    await user.selectOptions(categorySelect(), "cat-1");
+    await user.click(screen.getByRole("button", { name: /create product/i }));
+
+    await waitFor(() => {
+      expect(lastPostForm).not.toBeNull();
+    });
+    expect(lastPostForm!.has("external_url")).toBe(false);
+  });
+
+  it("rejects an invalid external link without a request", async () => {
+    const user = userEvent.setup();
+    renderForm();
+    await waitForCategoriesLoaded();
+
+    await user.type(screen.getByLabelText(/product name/i), "Leather Seat Cover");
+    await user.selectOptions(categorySelect(), "cat-1");
+    await user.type(screen.getByLabelText(/external link/i), "javascript:alert(1)");
+    await user.click(screen.getByRole("button", { name: /create product/i }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "External link must be an absolute http or https URL.",
+    );
+    expect(postCount).toBe(0);
+  });
+
+  it("rejects a negative stock quantity without a request", async () => {
+    const user = userEvent.setup();
+    renderForm();
+    await waitForCategoriesLoaded();
+
+    await user.type(screen.getByLabelText(/product name/i), "Leather Seat Cover");
+    await user.selectOptions(categorySelect(), "cat-1");
+    await user.clear(screen.getByLabelText(/stock quantity/i));
+    await user.type(screen.getByLabelText(/stock quantity/i), "-3");
+    await user.click(screen.getByRole("button", { name: /create product/i }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Stock quantity must be a non-negative whole number.",
+    );
+    expect(postCount).toBe(0);
+  });
+
   it("reports missing name via validation without a request", async () => {
     const user = userEvent.setup();
     renderForm();
@@ -328,6 +431,81 @@ describe("ProductForm edit mode", () => {
     expect(screen.getByText("City")).toBeInTheDocument();
   });
 
+  it("pre-fills the existing stock quantity", async () => {
+    server.use(
+      http.get("*/api/admin/products/:id", () =>
+        HttpResponse.json(makeProduct({ stock_quantity: 7 })),
+      ),
+    );
+    renderForm({ productId: "prod-1" });
+    await waitFor(() => {
+      expect(screen.getByLabelText(/product name/i)).toHaveValue("Leather Seat Cover");
+    });
+    expect(screen.getByLabelText(/stock quantity/i)).toHaveValue("7");
+  });
+
+  it("includes the stock quantity in the update payload", async () => {
+    const user = userEvent.setup();
+    renderForm({ productId: "prod-1" });
+    await waitFor(() => {
+      expect(screen.getByLabelText(/product name/i)).toHaveValue("Leather Seat Cover");
+    });
+
+    await user.clear(screen.getByLabelText(/stock quantity/i));
+    await user.type(screen.getByLabelText(/stock quantity/i), "4");
+    await user.click(screen.getByRole("button", { name: /save changes/i }));
+
+    await waitFor(() => {
+      expect(lastPutForm).not.toBeNull();
+    });
+    expect(lastPutForm!.get("stock_quantity")).toBe("4");
+  });
+
+  it("pre-fills the existing external link", async () => {
+    renderForm({ productId: "prod-1" });
+    await waitFor(() => {
+      expect(screen.getByLabelText(/product name/i)).toHaveValue("Leather Seat Cover");
+    });
+    expect(screen.getByLabelText(/external link/i)).toHaveValue("https://youtu.be/abc123");
+  });
+
+  it("includes the external link in the update payload", async () => {
+    const user = userEvent.setup();
+    renderForm({ productId: "prod-1" });
+    await waitFor(() => {
+      expect(screen.getByLabelText(/product name/i)).toHaveValue("Leather Seat Cover");
+    });
+
+    await user.clear(screen.getByLabelText(/external link/i));
+    await user.type(
+      screen.getByLabelText(/external link/i),
+      "https://example.com/product-details",
+    );
+    await user.click(screen.getByRole("button", { name: /save changes/i }));
+
+    await waitFor(() => {
+      expect(lastPutForm).not.toBeNull();
+    });
+    expect(lastPutForm!.get("external_url")).toBe("https://example.com/product-details");
+  });
+
+  it("sends clear_fields when the external link is emptied", async () => {
+    const user = userEvent.setup();
+    renderForm({ productId: "prod-1" });
+    await waitFor(() => {
+      expect(screen.getByLabelText(/product name/i)).toHaveValue("Leather Seat Cover");
+    });
+
+    await user.clear(screen.getByLabelText(/external link/i));
+    await user.click(screen.getByRole("button", { name: /save changes/i }));
+
+    await waitFor(() => {
+      expect(lastPutForm).not.toBeNull();
+    });
+    expect(lastPutForm!.has("external_url")).toBe(false);
+    expect(lastPutForm!.get("clear_fields")).toContain("external_url");
+  });
+
   it("shows the existing image preview in edit mode", async () => {
     server.use(
       http.get("*/api/admin/products/:id", () =>
@@ -426,7 +604,7 @@ describe("ProductForm edit mode", () => {
   });
 
   it("calls onSaved with the returned product", async () => {
-    let saved: Product | null = null;
+    let saved: AdminProduct | null = null;
     const user = userEvent.setup();
     renderForm({ productId: "prod-1", onSaved: (p) => { saved = p; } });
     await waitFor(() => {

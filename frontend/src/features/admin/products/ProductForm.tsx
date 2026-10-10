@@ -3,8 +3,8 @@ import { ImagePlus, X } from "lucide-react";
 import { ApiRequestError, api } from "../../../lib/api/client";
 import { availabilityLabel } from "../../../lib/utils/format";
 import type {
+  AdminProduct,
   Category,
-  Product,
   ProductAvailability,
   ProductCreatePayload,
   ProductUpdatePayload,
@@ -14,6 +14,15 @@ import { Button } from "../../../components/ui";
 
 const AVAILABILITY_OPTIONS: ProductAvailability[] = ["IN_STOCK", "OUT_OF_STOCK", "ON_ORDER"];
 
+function isValidAbsoluteHttpUrl(value: string): boolean {
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === "http:" || parsed.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
 const inputCls =
   "w-full rounded-md border border-border-light bg-white px-3 py-2.5 text-sm text-text-primary placeholder-text-muted outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500";
 
@@ -22,7 +31,7 @@ const labelCls = "mb-1.5 block text-sm font-semibold text-text-primary";
 interface ProductFormProps {
   /** Present when editing an existing product; omit for create mode. */
   productId?: string;
-  onSaved: (product: Product) => void;
+  onSaved: (product: AdminProduct) => void;
   onCancel: () => void;
 }
 
@@ -33,7 +42,7 @@ export function ProductForm({ productId, onSaved, onCancel }: ProductFormProps) 
   const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [initialProduct, setInitialProduct] = useState<Product | null>(null);
+  const [initialProduct, setInitialProduct] = useState<AdminProduct | null>(null);
 
   const [name, setName] = useState("");
   const [categoryId, setCategoryId] = useState("");
@@ -41,6 +50,8 @@ export function ProductForm({ productId, onSaved, onCancel }: ProductFormProps) 
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
   const [availability, setAvailability] = useState<ProductAvailability>("IN_STOCK");
+  const [stockQuantity, setStockQuantity] = useState("0");
+  const [externalUrl, setExternalUrl] = useState("");
   const [isActive, setIsActive] = useState(true);
   const [vehicleTags, setVehicleTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
@@ -72,6 +83,8 @@ export function ProductForm({ productId, onSaved, onCancel }: ProductFormProps) 
         setDescription(product.description);
         setPrice(product.price ?? "");
         setAvailability(product.availability);
+        setStockQuantity(product.stock_quantity != null ? String(product.stock_quantity) : "0");
+        setExternalUrl(product.external_url ?? "");
         setIsActive(product.is_active);
         setVehicleTags(product.vehicle_tags);
         setSubcategoryId(product.subcategory_id ?? "");
@@ -164,6 +177,8 @@ export function ProductForm({ productId, onSaved, onCancel }: ProductFormProps) 
     const trimmedName = name.trim();
     const trimmedDescription = description.trim();
     const trimmedPrice = price.trim();
+    const trimmedStock = stockQuantity.trim();
+    const trimmedExternalUrl = externalUrl.trim();
 
     if (!trimmedName) {
       setValidationError("Product name is required.");
@@ -177,6 +192,14 @@ export function ProductForm({ productId, onSaved, onCancel }: ProductFormProps) 
       setValidationError("Price must be a valid number or left blank.");
       return;
     }
+    if (trimmedStock !== "" && !/^\d+$/.test(trimmedStock)) {
+      setValidationError("Stock quantity must be a non-negative whole number.");
+      return;
+    }
+    if (trimmedExternalUrl !== "" && !isValidAbsoluteHttpUrl(trimmedExternalUrl)) {
+      setValidationError("External link must be an absolute http or https URL.");
+      return;
+    }
 
     const basePayload = {
       name: trimmedName,
@@ -185,6 +208,8 @@ export function ProductForm({ productId, onSaved, onCancel }: ProductFormProps) 
       description: trimmedDescription,
       price: trimmedPrice === "" ? null : trimmedPrice,
       availability,
+      stock_quantity: trimmedStock === "" ? 0 : Number(trimmedStock),
+      external_url: trimmedExternalUrl === "" ? null : trimmedExternalUrl,
       is_active: isActive,
       vehicle_tags: vehicleTags,
     };
@@ -198,6 +223,9 @@ export function ProductForm({ productId, onSaved, onCancel }: ProductFormProps) 
         }
         if (!subcategoryId && initialProduct?.subcategory_id != null) {
           clearFields.push("subcategory_id");
+        }
+        if (trimmedExternalUrl === "" && initialProduct?.external_url != null) {
+          clearFields.push("external_url");
         }
         const payload: ProductUpdatePayload = {
           ...basePayload,
@@ -354,6 +382,41 @@ export function ProductForm({ productId, onSaved, onCancel }: ProductFormProps) 
                 ))}
               </select>
             </div>
+          </div>
+
+          <div>
+            <label htmlFor="product-stock" className={labelCls}>
+              Stock Quantity
+            </label>
+            <input
+              id="product-stock"
+              type="text"
+              inputMode="numeric"
+              value={stockQuantity}
+              onChange={(e) => setStockQuantity(e.target.value)}
+              placeholder="0"
+              className={inputCls}
+            />
+            <p className="mt-1 text-xs text-text-muted">
+              Non-negative whole number. New products start at 0.
+            </p>
+          </div>
+
+          <div>
+            <label htmlFor="product-external-url" className={labelCls}>
+              External Link
+            </label>
+            <input
+              id="product-external-url"
+              type="url"
+              value={externalUrl}
+              onChange={(e) => setExternalUrl(e.target.value)}
+              placeholder="https://www.youtube.com/watch?v=... (optional)"
+              className={inputCls}
+            />
+            <p className="mt-1 text-xs text-text-muted">
+              Optional video or product page link. Opens in a new tab on the storefront.
+            </p>
           </div>
 
           <label className="flex items-center gap-2 text-sm text-text-primary">

@@ -11,6 +11,7 @@ import {
   NotFoundPage,
   ProductDetailPage,
   ProductsPage,
+  TestimonialsPage,
 } from "../../pages";
 import { CategoriesAdminPage } from "../../pages/admin/categories/CategoriesAdminPage";
 import { DashboardPage } from "../../pages/admin/dashboard/DashboardPage";
@@ -18,6 +19,7 @@ import { ProductFormPage } from "../../pages/admin/products/ProductFormPage";
 import { ProductsAdminPage } from "../../pages/admin/products/ProductsAdminPage";
 import { ShopSettingsAdminPage } from "../../pages/admin/shop/ShopSettingsAdminPage";
 import { SubcategoriesAdminPage } from "../../pages/admin/subcategories/SubcategoriesAdminPage";
+import { TestimonialsAdminPage } from "../../pages/admin/testimonials/TestimonialsAdminPage";
 import { AccountSettings } from "../../features/admin/account";
 import { LoginPage } from "../../pages/admin/auth/LoginPage";
 import { ForgotPasswordPage } from "../../pages/admin/auth/ForgotPasswordPage";
@@ -60,6 +62,10 @@ export const router = createBrowserRouter([
     element: withLayout(ContactPage)(),
   },
   {
+    path: "/testimonials",
+    element: withLayout(TestimonialsPage)(),
+  },
+  {
     path: "/admin/login",
     element: (
       <AdminAuthProvider>
@@ -97,6 +103,7 @@ export const router = createBrowserRouter([
       { path: "products/:productId/edit", element: <ProductFormPage /> },
       { path: "categories", element: <CategoriesAdminPage /> },
       { path: "subcategories", element: <SubcategoriesAdminPage /> },
+      { path: "testimonials", element: <TestimonialsAdminPage /> },
       { path: "shop", element: <ShopSettingsAdminPage /> },
       { path: "account", element: <AccountSettings /> },
       { path: "*", element: <Navigate to="/admin" replace /> },

@@ -5,10 +5,12 @@ Product creation/update use multipart/form-data so the (optional) image rides
 in the same request as the structured fields.
 """
 
+import logging
 from typing import Annotated
 
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile, status
 from pydantic import ValidationError
+from pymongo.errors import PyMongoError
 
 from app.api.dependencies import AdminDep, CsrfDep
 from app.core.config import get_settings
@@ -16,8 +18,11 @@ from app.db.dependencies import DatabaseDep
 from app.models.base import PyObjectId
 from app.models.enums import Availability
 from app.models.product import (
+    AdminProductListPage,
+    AdminProductRead,
     ProductListPage,
     ProductRead,
+    StockAdjustRequest,
     build_product_create,
     build_product_update,
 )
@@ -27,6 +32,7 @@ from app.services.products import (
     InvalidReferenceError,
     NotFoundError,
     ProductError,
+    adjust_product_stock,
     create_product,
     delete_product,
     get_admin_product,
@@ -43,6 +49,8 @@ from app.storage.base import (
 )
 from app.storage.dependencies import StorageDep
 from app.storage.images import validate_image_upload
+
+logger = logging.getLogger(__name__)
 
 admin_router = APIRouter(tags=["admin-products"])
 public_router = APIRouter(tags=["products"])
@@ -134,7 +142,7 @@ async def public_product(slug: str, database: DatabaseDep) -> ProductRead:
 # ---------------------------------------------------------------------------
 
 
-@admin_router.get("/admin/products", response_model=ProductListPage)
+@admin_router.get("/admin/products", response_model=AdminProductListPage)
 async def admin_list_products(
     _admin: AdminDep,
     database: DatabaseDep,
@@ -146,7 +154,7 @@ async def admin_list_products(
     sort: str = "newest",
     page: int = 1,
     page_size: int = 20,
-) -> ProductListPage:
+) -> AdminProductListPage:
     """Admin product view; inactive products and inactive chains included."""
     try:
         return await list_admin_products(
@@ -164,10 +172,10 @@ async def admin_list_products(
         raise _map_product_error(exc) from exc
 
 
-@admin_router.get("/admin/products/{product_id}", response_model=ProductRead)
+@admin_router.get("/admin/products/{product_id}", response_model=AdminProductRead)
 async def admin_get_product(
     product_id: PyObjectId, _admin: AdminDep, database: DatabaseDep
-) -> ProductRead:
+) -> AdminProductRead:
     try:
         return await get_admin_product(database, product_id)
     except NotFoundError as exc:
@@ -176,7 +184,7 @@ async def admin_get_product(
 
 @admin_router.post(
     "/admin/products",
-    response_model=ProductRead,
+    response_model=AdminProductRead,
     status_code=status.HTTP_201_CREATED,
 )
 async def admin_create_product(
@@ -190,10 +198,12 @@ async def admin_create_product(
     description: Annotated[str | None, Form()] = None,
     price: Annotated[str | None, Form()] = None,
     availability: Annotated[str | None, Form()] = None,
+    stock_quantity: Annotated[str | None, Form()] = None,
+    external_url: Annotated[str | None, Form()] = None,
     is_active: Annotated[str | None, Form()] = None,
     vehicle_tags: Annotated[str | None, Form()] = None,
     image: Annotated[UploadFile | None, File()] = None,
-) -> ProductRead:
+) -> AdminProductRead:
     """Create a product; ``image`` is optional (single JPEG/PNG/WEBP, <=5 MB)."""
     try:
         payload = build_product_create(
@@ -204,6 +214,8 @@ async def admin_create_product(
                 "description": description,
                 "price": price,
                 "availability": availability,
+                "stock_quantity": stock_quantity,
+                "external_url": external_url,
                 "is_active": is_active,
                 "vehicle_tags": vehicle_tags,
             }
@@ -222,7 +234,7 @@ async def admin_create_product(
         raise _map_storage_error(exc) from exc
 
 
-@admin_router.put("/admin/products/{product_id}", response_model=ProductRead)
+@admin_router.put("/admin/products/{product_id}", response_model=AdminProductRead)
 async def admin_update_product(
     product_id: PyObjectId,
     _admin: AdminDep,
@@ -235,11 +247,13 @@ async def admin_update_product(
     description: Annotated[str | None, Form()] = None,
     price: Annotated[str | None, Form()] = None,
     availability: Annotated[str | None, Form()] = None,
+    stock_quantity: Annotated[str | None, Form()] = None,
+    external_url: Annotated[str | None, Form()] = None,
     is_active: Annotated[str | None, Form()] = None,
     vehicle_tags: Annotated[str | None, Form()] = None,
     clear_fields: Annotated[str | None, Form()] = None,
     image: Annotated[UploadFile | None, File()] = None,
-) -> ProductRead:
+) -> AdminProductRead:
     """Update a product. ``image`` replaces and deletes the previous one."""
     try:
         payload = build_product_update(
@@ -250,6 +264,8 @@ async def admin_update_product(
                 "description": description,
                 "price": price,
                 "availability": availability,
+                "stock_quantity": stock_quantity,
+                "external_url": external_url,
                 "is_active": is_active,
                 "vehicle_tags": vehicle_tags,
                 "clear_fields": clear_fields,
@@ -267,6 +283,27 @@ async def admin_update_product(
         raise _map_product_error(exc) from exc
     except StorageError as exc:
         raise _map_storage_error(exc) from exc
+
+
+@admin_router.patch("/admin/products/{product_id}/stock", response_model=AdminProductRead)
+async def admin_adjust_stock(
+    product_id: PyObjectId,
+    _admin: AdminDep,
+    _csrf: CsrfDep,
+    database: DatabaseDep,
+    request: StockAdjustRequest,
+) -> AdminProductRead:
+    """Adjust stock by exactly one unit using a concurrency-safe write."""
+    try:
+        return await adjust_product_stock(database, product_id, request.delta)
+    except ProductError as exc:
+        raise _map_product_error(exc) from exc
+    except PyMongoError as exc:
+        logger.error("Stock adjustment failed for product %s: %s", product_id, exc)
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Stock update failed; please try again",
+        ) from exc
 
 
 @admin_router.delete("/admin/products/{product_id}", status_code=status.HTTP_204_NO_CONTENT)

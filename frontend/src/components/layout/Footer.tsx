@@ -6,6 +6,7 @@ import { ThridhaSignature } from "../common/ThridhaSignature";
 const quickLinks = [
   { to: "/", label: "Home" },
   { to: "/products", label: "Products" },
+  { to: "/testimonials", label: "Testimonials" },
   { to: "/about", label: "About Us" },
   { to: "/contact", label: "Contact" },
 ];

@@ -28,6 +28,7 @@ const mockProduct: Product = {
   is_active: true,
   vehicle_tags: ["Maruti Swift", "Honda City", "Hyundai Creta"],
   image_url: "/images/products/seat-cover.jpg",
+  external_url: "https://www.youtube.com/watch?v=dEmYpArt",
   created_at: "2024-01-01T00:00:00Z",
   updated_at: "2024-01-01T00:00:00Z",
 };
@@ -112,6 +113,26 @@ describe("ProductDetail", () => {
     expect(screen.getByText("Home")).toHaveAttribute("href", "/");
     expect(screen.getByText("Products")).toHaveAttribute("href", "/products");
     expect(screen.getByText("Seat Covers")).toHaveAttribute("href", "/categories/seat-covers");
+  });
+
+  it("shows an external link button when the product has a URL", async () => {
+    renderDetail("premium-leather-seat-cover");
+    await waitForProductLoad("Premium Leather Seat Cover");
+    const external = screen.getByRole("link", { name: /view more/i });
+    expect(external).toHaveAttribute("href", "https://www.youtube.com/watch?v=dEmYpArt");
+    expect(external).toHaveAttribute("target", "_blank");
+    expect(external).toHaveAttribute("rel", "noopener noreferrer");
+  });
+
+  it("hides the external link button when no URL is set", async () => {
+    server.use(
+      http.get("*/api/products/:slug", () =>
+        HttpResponse.json({ ...mockProduct, external_url: null }),
+      ),
+    );
+    renderDetail("premium-leather-seat-cover");
+    await waitForProductLoad("Premium Leather Seat Cover");
+    expect(screen.queryByRole("link", { name: /view more/i })).not.toBeInTheDocument();
   });
 
   it("shows WhatsApp enquire button when shop settings have phone", async () => {

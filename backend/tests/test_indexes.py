@@ -18,6 +18,7 @@ async def test_all_collections_have_declared_indexes(fake_db: AsyncDatabase) -> 
         "categories",
         "subcategories",
         "products",
+        "testimonials",
     }
 
 
@@ -35,6 +36,10 @@ async def test_ensure_indexes_creates_expected_names(fake_db: AsyncDatabase) -> 
             "ix_products_active_availability",
             "ix_products_active_created",
             "ix_products_vehicle_tags",
+        ],
+        "testimonials": [
+            "ix_testimonials_public",
+            "ix_testimonials_status_created",
         ],
     }
     assert created == expected

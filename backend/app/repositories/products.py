@@ -8,6 +8,7 @@ from typing import Any
 
 from bson import ObjectId
 
+from app.models.base import utc_now
 from app.models.product import Product
 from app.repositories.base import BaseRepository
 
@@ -21,6 +22,29 @@ class ProductRepository(BaseRepository[Product]):
         if exclude_id is not None:
             query["_id"] = {"$ne": exclude_id}
         return await self.collection.find_one(query, projection={"_id": 1}) is not None
+
+    async def adjust_stock(self, object_id: ObjectId, delta: int) -> int:
+        """Atomically adjust ``stock_quantity`` by ``delta``.
+
+        The increment/decrement is a single document update using ``$inc``, so
+        concurrent adjustments never lose an update. For decrements a guard
+        filter rejects any update that would push the quantity below zero
+        (including legacy documents that have no stock field, which are
+        treated as zero). Returns the number of documents matched by the
+        guard, so callers can distinguish "product missing" from
+        "insufficient stock".
+        """
+        filter: dict[str, Any] = {"_id": object_id}
+        if delta < 0:
+            filter["stock_quantity"] = {"$gte": -delta}
+        result = await self.collection.update_one(
+            filter,
+            {
+                "$inc": {"stock_quantity": delta},
+                "$set": {"updated_at": utc_now()},
+            },
+        )
+        return result.matched_count
 
     async def count_query(self, query: dict[str, Any]) -> int:
         return await self.collection.count_documents(query)

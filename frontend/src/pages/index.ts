@@ -5,3 +5,4 @@ export { HomePage } from "./HomePage";
 export { NotFoundPage } from "./NotFoundPage";
 export { ProductDetailPage } from "./ProductDetailPage";
 export { ProductsPage } from "./ProductsPage";
+export { TestimonialsPage } from "./TestimonialsPage";

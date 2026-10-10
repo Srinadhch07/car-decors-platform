@@ -1,4 +1,7 @@
 import type {
+  AdminProduct,
+  AdminTestimonial,
+  AdminTestimonialListPage,
   AdminUser,
   Category,
   CategoryCreatePayload,
@@ -19,6 +22,12 @@ import type {
   Subcategory,
   SubcategoryCreatePayload,
   SubcategoryUpdatePayload,
+  Testimonial,
+  TestimonialAdminQueryParams,
+  TestimonialListPage,
+  TestimonialStatus,
+  TestimonialSubmissionPayload,
+  TestimonialUpdatePayload,
 } from "../../types/api";
 
 export const CSRF_HEADER = "X-CSRF-Token";
@@ -117,6 +126,29 @@ export class ApiClient {
 
   async getProduct(slug: string): Promise<Product> {
     return this.request<Product>(`/api/products/${encodeURIComponent(slug)}`);
+  }
+
+  // ─── Testimonials (public) ───
+
+  /** Approved, published, consented testimonials only. */
+  async getTestimonials(
+    params: { page?: number; page_size?: number } = {},
+  ): Promise<TestimonialListPage> {
+    const query = this.buildQueryString(params);
+    return this.request<TestimonialListPage>(`/api/testimonials${query}`);
+  }
+
+  /** Featured testimonials for marketing surfaces (homepage). */
+  async getFeaturedTestimonials(
+    params: { page?: number; page_size?: number } = {},
+  ): Promise<TestimonialListPage> {
+    const query = this.buildQueryString(params);
+    return this.request<TestimonialListPage>(`/api/testimonials/featured${query}`);
+  }
+
+  /** Submit a testimonial for moderation; it always starts pending. */
+  async submitTestimonial(payload: TestimonialSubmissionPayload): Promise<Testimonial> {
+    return this.request<Testimonial>("/api/testimonials", this.jsonInit("POST", payload));
   }
 
   // ─── Admin: Session / auth (cookies!) ───
@@ -240,30 +272,97 @@ export class ApiClient {
   async adminCreateProduct(
     payload: ProductCreatePayload,
     image?: File | null,
-  ): Promise<Product> {
-    return this.request<Product>(
+  ): Promise<AdminProduct> {
+    return this.request<AdminProduct>(
       "/api/admin/products",
       this.multipartInit(payload, image),
     );
   }
 
-  async adminGetProduct(id: string): Promise<Product> {
-    return this.request<Product>(`/api/admin/products/${encodeURIComponent(id)}`);
+  async adminGetProduct(id: string): Promise<AdminProduct> {
+    return this.request<AdminProduct>(`/api/admin/products/${encodeURIComponent(id)}`);
   }
 
   async adminUpdateProduct(
     id: string,
     payload: ProductUpdatePayload,
     image?: File | null,
-  ): Promise<Product> {
-    return this.request<Product>(
+  ): Promise<AdminProduct> {
+    return this.request<AdminProduct>(
       `/api/admin/products/${encodeURIComponent(id)}`,
       this.multipartInit(payload, image, true),
     );
   }
 
+  /**
+   * Atomically adjust a product's stock by exactly one unit.
+   *
+   * `delta` is `+1` to add one unit or `-1` to remove one unit; the backend
+   * rejects decrements below zero and returns the persisted product.
+   */
+  async adminAdjustProductStock(id: string, delta: 1 | -1): Promise<AdminProduct> {
+    return this.request<AdminProduct>(
+      `/api/admin/products/${encodeURIComponent(id)}/stock`,
+      this.jsonInit("PATCH", { delta }),
+    );
+  }
+
   async adminDeleteProduct(id: string): Promise<void> {
     await this.request<void>(`/api/admin/products/${encodeURIComponent(id)}`, { method: "DELETE" });
+  }
+
+  // ─── Admin: Testimonials (moderation) ───
+
+  async adminListTestimonials(
+    query: TestimonialAdminQueryParams = {},
+  ): Promise<AdminTestimonialListPage> {
+    const qs = this.buildQueryString(
+      query as Record<string, string | number | boolean | undefined>,
+    );
+    return this.request<AdminTestimonialListPage>(`/api/admin/testimonials${qs}`);
+  }
+
+  async adminUpdateTestimonial(
+    id: string,
+    payload: TestimonialUpdatePayload,
+  ): Promise<AdminTestimonial> {
+    return this.request<AdminTestimonial>(
+      `/api/admin/testimonials/${encodeURIComponent(id)}`,
+      this.jsonInit("PUT", payload),
+    );
+  }
+
+  async adminSetTestimonialStatus(
+    id: string,
+    status: TestimonialStatus,
+  ): Promise<AdminTestimonial> {
+    return this.request<AdminTestimonial>(
+      `/api/admin/testimonials/${encodeURIComponent(id)}/status`,
+      this.jsonInit("PATCH", { status }),
+    );
+  }
+
+  async adminSetTestimonialPublication(
+    id: string,
+    published: boolean,
+  ): Promise<AdminTestimonial> {
+    return this.request<AdminTestimonial>(
+      `/api/admin/testimonials/${encodeURIComponent(id)}/publication`,
+      this.jsonInit("PATCH", { published }),
+    );
+  }
+
+  async adminSetTestimonialFeatured(id: string, isFeatured: boolean): Promise<AdminTestimonial> {
+    return this.request<AdminTestimonial>(
+      `/api/admin/testimonials/${encodeURIComponent(id)}/feature`,
+      this.jsonInit("PATCH", { is_featured: isFeatured }),
+    );
+  }
+
+  async adminDeleteTestimonial(id: string): Promise<void> {
+    await this.request<void>(`/api/admin/testimonials/${encodeURIComponent(id)}`, {
+      method: "DELETE",
+    });
   }
 
   // ─── Request builders ───
@@ -289,6 +388,8 @@ export class ApiClient {
       "description",
       "price",
       "availability",
+      "stock_quantity",
+      "external_url",
       "is_active",
     ];
     for (const field of fields) {

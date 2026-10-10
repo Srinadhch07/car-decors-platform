@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, MessageCircle, Phone } from "lucide-react";
+import { ArrowLeft, ExternalLink, MessageCircle, Phone } from "lucide-react";
 import type { Category, Product } from "../../types/api";
 import { ApiRequestError, api } from "../../lib/api/client";
 import { formatPrice, availabilityLabel, truncate } from "../../lib/utils/format";
@@ -309,6 +309,21 @@ export function ProductDetail({ slug }: ProductDetailProps) {
                   >
                     <Phone className="h-5 w-5" />
                     Call Us
+                  </a>
+                </div>
+              )}
+
+              {/* External link */}
+              {product.external_url && (
+                <div className="mt-4">
+                  <a
+                    href={product.external_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center gap-2 rounded-md border border-border bg-white px-6 py-3 text-base font-medium text-text-secondary transition-colors hover:bg-surface-muted active:bg-surface-muted sm:w-auto"
+                  >
+                    <ExternalLink className="h-5 w-5" />
+                    View More
                   </a>
                 </div>
               )}

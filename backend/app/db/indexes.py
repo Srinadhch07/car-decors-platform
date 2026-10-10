@@ -54,6 +54,21 @@ INDEX_DEFINITIONS: dict[str, tuple[IndexSpec, ...]] = {
         ),
         IndexSpec([("vehicle_tags", ASCENDING)], name="ix_products_vehicle_tags"),
     ),
+    "testimonials": (
+        IndexSpec(
+            [
+                ("status", ASCENDING),
+                ("published", ASCENDING),
+                ("consent", ASCENDING),
+                ("created_at", DESCENDING),
+            ],
+            name="ix_testimonials_public",
+        ),
+        IndexSpec(
+            [("status", ASCENDING), ("created_at", DESCENDING)],
+            name="ix_testimonials_status_created",
+        ),
+    ),
 }
 
 

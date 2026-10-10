@@ -146,8 +146,18 @@ export interface Product {
   is_active: boolean;
   vehicle_tags: string[];
   image_url: string | null;
+  /** Optional external link (video or product page). */
+  external_url: string | null;
   created_at: string;
   updated_at: string;
+}
+
+/**
+ * A product as returned by the admin endpoints. Exact stock quantities are
+ * admin-only, so they are absent from the public {@link Product} shape.
+ */
+export interface AdminProduct extends Product {
+  stock_quantity: number;
 }
 
 export interface ProductCreatePayload {
@@ -157,8 +167,11 @@ export interface ProductCreatePayload {
   description: string;
   price?: string | null;
   availability: ProductAvailability;
+  stock_quantity?: number;
   is_active?: boolean;
   vehicle_tags: string[];
+  /** Blank or null to omit the link. */
+  external_url?: string | null;
   /** Optional binary image file (multipart field `image`). */
   image?: File | null;
 }
@@ -170,8 +183,11 @@ export interface ProductUpdatePayload {
   description?: string;
   price?: string | null;
   availability?: ProductAvailability;
+  stock_quantity?: number;
   is_active?: boolean;
   vehicle_tags?: string[];
+  /** Blank or null to omit the link; include "external_url" in clear_fields to remove it. */
+  external_url?: string | null;
   /** Optional binary image file to replace the current one. */
   image?: File | null;
   /** Comma-separated field names (e.g. "price,subcategory_id") to null out. */
@@ -210,7 +226,82 @@ export interface ProductAdminQueryParams {
   page_size?: number;
 }
 
-export type ProductAdminListPage = ProductListPage;
+export type ProductAdminListPage = {
+  items: AdminProduct[];
+  page: number;
+  page_size: number;
+  total: number;
+  total_pages: number;
+};
+
+// ─── Testimonials ───
+
+export type TestimonialStatus = "pending" | "approved" | "rejected";
+
+/** A testimonial as exposed on the public site (no moderation fields). */
+export interface Testimonial {
+  id: string;
+  customer_name: string;
+  text: string;
+  rating: number | null;
+  created_at: string;
+}
+
+export interface TestimonialListPage {
+  items: Testimonial[];
+  page: number;
+  page_size: number;
+  total: number;
+  total_pages: number;
+}
+
+/** Public submission payload; privileged fields are rejected by the server. */
+export interface TestimonialSubmissionPayload {
+  customer_name: string;
+  text: string;
+  rating?: number | null;
+  /** Explicit consent to public display is required. */
+  consent: boolean;
+  /** Honeypot field; a real customer never fills it. */
+  website?: string;
+}
+
+/** A testimonial as returned by the admin endpoints, including moderation state. */
+export interface AdminTestimonial {
+  id: string;
+  customer_name: string;
+  text: string;
+  rating: number | null;
+  status: TestimonialStatus;
+  published: boolean;
+  is_featured: boolean;
+  consent: boolean;
+  moderation_note: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AdminTestimonialListPage {
+  items: AdminTestimonial[];
+  page: number;
+  page_size: number;
+  total: number;
+  total_pages: number;
+}
+
+export interface TestimonialAdminQueryParams {
+  status?: TestimonialStatus;
+  page?: number;
+  page_size?: number;
+}
+
+/** Admin content edits; an included null clears rating/moderation_note. */
+export interface TestimonialUpdatePayload {
+  customer_name?: string;
+  text?: string;
+  rating?: number | null;
+  moderation_note?: string | null;
+}
 
 // ─── API error ───
 

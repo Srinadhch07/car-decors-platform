@@ -1,11 +1,11 @@
 import { type FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { Pencil, Plus, Search, Trash2, X } from "lucide-react";
+import { Minus, Pencil, Plus, Search, Trash2, X } from "lucide-react";
 import { ApiRequestError, api } from "../../../lib/api/client";
 import { availabilityLabel, formatPrice } from "../../../lib/utils/format";
 import type {
+  AdminProduct,
   Category,
-  Product,
   ProductAdminListPage,
   ProductAdminQueryParams,
   ProductAvailability,
@@ -59,7 +59,7 @@ export function ProductsAdminPage() {
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
 
-  const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<AdminProduct | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
@@ -229,7 +229,7 @@ export function ProductsAdminPage() {
 
   // --- row actions ---
 
-  const applyRowUpdate = useCallback((updated: Product) => {
+  const applyRowUpdate = useCallback((updated: AdminProduct) => {
     setPageData((prev) =>
       prev
         ? {
@@ -241,7 +241,7 @@ export function ProductsAdminPage() {
   }, []);
 
   const handleAvailabilityChange = useCallback(
-    async (product: Product, value: ProductAvailability) => {
+    async (product: AdminProduct, value: ProductAvailability) => {
       setUpdatingId(product.id);
       setActionError(null);
       try {
@@ -259,7 +259,7 @@ export function ProductsAdminPage() {
   );
 
   const handleToggleActive = useCallback(
-    async (product: Product) => {
+    async (product: AdminProduct) => {
       setUpdatingId(product.id);
       setActionError(null);
       try {
@@ -276,7 +276,23 @@ export function ProductsAdminPage() {
     [applyRowUpdate],
   );
 
-  const requestDelete = useCallback((product: Product) => {
+  const handleStockChange = useCallback(
+    async (product: AdminProduct, delta: 1 | -1) => {
+      setUpdatingId(product.id);
+      setActionError(null);
+      try {
+        const updated = await api.adminAdjustProductStock(product.id, delta);
+        applyRowUpdate(updated);
+      } catch (err) {
+        setActionError(err instanceof Error ? err.message : "Failed to update stock");
+      } finally {
+        setUpdatingId(null);
+      }
+    },
+    [applyRowUpdate],
+  );
+
+  const requestDelete = useCallback((product: AdminProduct) => {
     setDeleteError(null);
     setDeleteTarget(product);
   }, []);
@@ -526,6 +542,9 @@ export function ProductsAdminPage() {
                     Price
                   </th>
                   <th scope="col" className="px-4 py-3 text-left font-semibold text-text-secondary">
+                    Stock
+                  </th>
+                  <th scope="col" className="px-4 py-3 text-left font-semibold text-text-secondary">
                     Availability
                   </th>
                   <th scope="col" className="px-4 py-3 text-left font-semibold text-text-secondary">
@@ -568,6 +587,38 @@ export function ProductsAdminPage() {
                       </td>
                       <td className="px-4 py-3 font-medium text-text-primary">
                         {formatPrice(product.price)}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className="w-8 text-center font-medium tabular-nums text-text-primary"
+                            aria-label={`Stock quantity for ${product.name}`}
+                          >
+                            {product.stock_quantity}
+                          </span>
+                          <div className="flex items-center gap-1">
+                            <button
+                              type="button"
+                              onClick={() => handleStockChange(product, -1)}
+                              disabled={updatingId === product.id || product.stock_quantity <= 0}
+                              aria-label={`Decrease stock for ${product.name}`}
+                              title="Decrease stock"
+                              className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-border-light text-text-secondary transition-colors hover:bg-surface-muted hover:text-orange-600 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-text-secondary"
+                            >
+                              <Minus className="h-3.5 w-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleStockChange(product, 1)}
+                              disabled={updatingId === product.id}
+                              aria-label={`Increase stock for ${product.name}`}
+                              title="Increase stock"
+                              className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-border-light text-text-secondary transition-colors hover:bg-surface-muted hover:text-orange-600 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-text-secondary"
+                            >
+                              <Plus className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        </div>
                       </td>
                       <td className="px-4 py-3">
                         <select

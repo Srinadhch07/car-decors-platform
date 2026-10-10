@@ -6,6 +6,7 @@ from app.repositories.categories import CategoryRepository
 from app.repositories.products import ProductRepository
 from app.repositories.shop_settings import SHOP_SETTINGS_ID, ShopSettingsRepository
 from app.repositories.subcategories import SubcategoryRepository
+from app.repositories.testimonials import TestimonialRepository
 
 __all__ = [
     "SHOP_SETTINGS_ID",
@@ -15,4 +16,5 @@ __all__ = [
     "ProductRepository",
     "ShopSettingsRepository",
     "SubcategoryRepository",
+    "TestimonialRepository",
 ]

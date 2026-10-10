@@ -4,6 +4,7 @@ export { ValuePropositions } from "./ValuePropositions";
 export { CategorySection } from "./CategorySection";
 export { CategoryCard } from "./CategoryCard";
 export { FeaturedProducts } from "./FeaturedProducts";
+export { FeaturedTestimonials } from "./FeaturedTestimonials";
 export { ProductCard } from "./ProductCard";
 export { WhyChooseSection } from "./WhyChooseSection";
 export { ContactCTA } from "./ContactCTA";

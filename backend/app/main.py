@@ -10,7 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pymongo.errors import PyMongoError
 
-from app.api.routes import auth, catalog, health, products, seo, shop
+from app.api.routes import auth, catalog, health, products, seo, shop, testimonials
 from app.core.config import Settings, get_settings
 from app.core.db import mongo
 from app.core.rate_limit import SlidingWindowLimiter
@@ -81,6 +81,10 @@ def create_app() -> FastAPI:
         max_events=settings.reset_password_rate_limit_max,
         window_seconds=settings.reset_password_rate_limit_window_minutes * 60,
     )
+    app.state.testimonial_limiter = SlidingWindowLimiter(
+        max_events=settings.testimonial_submit_rate_limit_max,
+        window_seconds=settings.testimonial_submit_rate_limit_window_minutes * 60,
+    )
 
     # Gmail SMTP delivery for password-reset emails (backend only).
     app.state.email_service = build_email_service(settings)
@@ -100,6 +104,8 @@ def create_app() -> FastAPI:
     app.include_router(catalog.admin_router, prefix=settings.api_prefix)
     app.include_router(products.public_router, prefix=settings.api_prefix)
     app.include_router(products.admin_router, prefix=settings.api_prefix)
+    app.include_router(testimonials.public_router, prefix=settings.api_prefix)
+    app.include_router(testimonials.admin_router, prefix=settings.api_prefix)
 
     # SEO endpoints are intentionally served at the root (no /api prefix) so
     # crawlers can reach /sitemap.xml directly.

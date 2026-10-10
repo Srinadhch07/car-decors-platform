@@ -9,3 +9,15 @@ class Availability(StrEnum):
     IN_STOCK = "IN_STOCK"
     OUT_OF_STOCK = "OUT_OF_STOCK"
     ON_ORDER = "ON_ORDER"
+
+
+class TestimonialStatus(StrEnum):
+    """Moderation lifecycle of a customer testimonial.
+
+    New submissions always start as ``pending``. Only ``approved`` and
+    explicitly ``published`` testimonials with consent are ever visible.
+    """
+
+    PENDING = "pending"
+    APPROVED = "approved"
+    REJECTED = "rejected"

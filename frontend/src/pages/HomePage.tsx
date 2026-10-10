@@ -14,6 +14,7 @@ import {
   ValuePropositions,
   CategorySection,
   FeaturedProducts,
+  FeaturedTestimonials,
   WhyChooseSection,
   ContactCTA,
 } from "../features/home";
@@ -63,6 +64,7 @@ export function HomePage() {
       <ValuePropositions />
       <CategorySection />
       <FeaturedProducts />
+      <FeaturedTestimonials />
       <WhyChooseSection />
       <ContactCTA />
     </div>
