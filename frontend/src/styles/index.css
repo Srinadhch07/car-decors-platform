@@ -2,16 +2,16 @@
 
 /* ─── Design Tokens ─── */
 
-/* Runtime theme palette. The defaults below reproduce the original static
-   palette exactly, so the site looks identical until an admin saves a theme
+/* Runtime theme palette. The defaults below reproduce the shipped indigo theme
+   (#363199), so the site matches the brand until an admin saves a theme
    (ShopSettingsProvider then overrides these on <html> via applyTheme). */
 :root {
-  --theme-primary: #f97316;
-  --theme-primary-hover: #ea580c;
-  --theme-primary-active: #c2410c;
-  --theme-primary-deep: #9a3412;
-  --theme-primary-light: #fb923c;
-  --theme-primary-soft: #fff7ed;
+  --theme-primary: #363199;
+  --theme-primary-hover: #312c8a;
+  --theme-primary-active: #2a2677;
+  --theme-primary-deep: #242065;
+  --theme-primary-light: #6865b3;
+  --theme-primary-soft: #e1e0f0;
   --theme-secondary: #111111;
   --theme-secondary-soft: #1a1a1a;
   --theme-secondary-dim: #262626;
@@ -162,5 +162,77 @@
     -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
+  }
+}
+
+/* ─── Decorative 2D motion ─── */
+
+/* Automotive "drive-across" motion — hero silhouette (desktop only) */
+.animate-car-drive {
+  animation: car-drive 34s linear infinite;
+}
+
+@keyframes car-drive {
+  0% {
+    transform: translateX(-260px);
+  }
+  100% {
+    transform: translateX(calc(100vw + 260px));
+  }
+}
+
+/* Road-lane dash flow — pairs with the car deco */
+.animate-lane-flow {
+  animation: lane-flow 1.1s linear infinite;
+}
+
+@keyframes lane-flow {
+  0% {
+    background-position-x: 0;
+  }
+  100% {
+    background-position-x: 28px;
+  }
+}
+
+/* Accessible: honour the OS "reduce motion" request for all CSS motion.
+   JS-driven (GSAP) motion is already guarded in src/lib/motion. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Hide the decorative automotive deco entirely */
+  .animate-car-drive,
+  .animate-lane-flow {
+    display: none !important;
+  }
+}
+
+/* Mobile navigation drawer — subtle entrance/exit. Drawer stays controlled by
+   the `hidden` attribute (a11y + tests); progressive enhancement only. */
+#mobile-nav {
+  opacity: 1;
+  transform: translateY(0);
+  transition:
+    opacity 0.22s ease,
+    transform 0.22s ease,
+    display 0.22s allow-discrete;
+}
+
+#mobile-nav[hidden] {
+  opacity: 0;
+  transform: translateY(-6px);
+}
+
+@starting-style {
+  #mobile-nav {
+    opacity: 0;
+    transform: translateY(-6px);
   }
 }

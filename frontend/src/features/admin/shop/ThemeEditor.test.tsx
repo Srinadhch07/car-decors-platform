@@ -17,7 +17,7 @@ describe("ThemeEditor", () => {
   it("loads the saved theme into the preset and hex inputs", () => {
     renderEditor();
     expect(screen.getByLabelText("Website theme preset")).toHaveValue("automotive-orange");
-    expect(screen.getByLabelText("Brand color hex code")).toHaveValue("#F97316");
+    expect(screen.getByLabelText("Brand color hex code")).toHaveValue("#363199");
     expect(screen.getByLabelText("Body text hex code")).toHaveValue("#1A1A1A");
   });
 

@@ -22,11 +22,11 @@ _HEX_COLOR_PATTERN = re.compile(r"^#[0-9a-fA-F]{6}$")
 _PRESET_PATTERN = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 
 #: The default website theme (a.k.a. the "Automotive Orange" preset). These
-#: values intentionally mirror the original static palette so the shop looks
-#: identical until an admin explicitly saves a new theme.
+#: values define the shipped indigo branding and apply until an admin
+#: explicitly saves a new theme.
 DEFAULT_THEME_VALUES = {
     "preset": "automotive-orange",
-    "primary": "#F97316",  # brand orange (was --color-orange-500)
+    "primary": "#363199",  # brand indigo (was --color-orange-500)
     "secondary": "#111111",  # dark surfaces (was --color-dark-900)
     "accent": "#FFFFFF",  # contrast text on brand/dark surfaces
     "background": "#FFFFFF",  # main page background (was --color-surface)

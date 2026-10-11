@@ -62,7 +62,7 @@ describe("ShopSettingsProvider", () => {
 
     await waitFor(() => expect(screen.getByTestId("load")).toHaveTextContent("done"));
     expect(screen.getByTestId("theme")).toHaveTextContent("none");
-    expect(document.documentElement.style.getPropertyValue("--theme-primary")).toBe("#F97316");
+    expect(document.documentElement.style.getPropertyValue("--theme-primary")).toBe("#363199");
   });
 
   it("falls back to the default palette when loading fails", async () => {
@@ -76,6 +76,6 @@ describe("ShopSettingsProvider", () => {
 
     await waitFor(() => expect(screen.getByTestId("load")).toHaveTextContent("done"));
     expect(screen.getByTestId("theme")).toHaveTextContent("none");
-    expect(document.documentElement.style.getPropertyValue("--theme-primary")).toBe("#F97316");
+    expect(document.documentElement.style.getPropertyValue("--theme-primary")).toBe("#363199");
   });
 });

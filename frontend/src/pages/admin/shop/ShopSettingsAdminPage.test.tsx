@@ -226,6 +226,6 @@ describe("ShopSettingsAdminPage", () => {
     expect(hex).toHaveValue("#123456");
 
     await user.click(screen.getByRole("button", { name: "Reset colors" }));
-    expect(screen.getByLabelText("Brand color hex code")).toHaveValue("#F97316");
+    expect(screen.getByLabelText("Brand color hex code")).toHaveValue("#363199");
   });
 });

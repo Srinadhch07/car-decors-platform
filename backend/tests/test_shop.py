@@ -30,7 +30,7 @@ PUBLIC_FIELDS = {
 #: Mirrors the backend default theme (colors normalize to uppercase).
 DEFAULT_THEME = {
     "preset": "automotive-orange",
-    "primary": "#F97316",
+    "primary": "#363199",
     "secondary": "#111111",
     "accent": "#FFFFFF",
     "background": "#FFFFFF",

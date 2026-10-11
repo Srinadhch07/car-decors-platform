@@ -28,13 +28,13 @@ export const THEME_VAR_NAMES = [
 
 export type ThemeVars = Record<(typeof THEME_VAR_NAMES)[number], string>;
 
-const AUTO_ORANGE_VARS: ThemeVars = {
-  "--theme-primary": "#F97316",
-  "--theme-primary-hover": "#EA580C",
-  "--theme-primary-active": "#C2410C",
-  "--theme-primary-deep": "#9A3412",
-  "--theme-primary-light": "#FB923C",
-  "--theme-primary-soft": "#FFF7ED",
+const AUTO_INDIGO_VARS: ThemeVars = {
+  "--theme-primary": "#363199",
+  "--theme-primary-hover": "#312C8A",
+  "--theme-primary-active": "#2A2677",
+  "--theme-primary-deep": "#242065",
+  "--theme-primary-light": "#6865B3",
+  "--theme-primary-soft": "#E1E0F0",
   "--theme-secondary": "#111111",
   "--theme-secondary-soft": "#1A1A1A",
   "--theme-secondary-dim": "#262626",
@@ -73,8 +73,9 @@ export function sanitizeTheme(theme: ThemeColors | Partial<ThemeColors> | null |
 
 /**
  * Expand a 7-color semantic theme into the full CSS variable set. The untouched
- * default theme resolves to the exact original palette (pixel-identical until
- * an admin saves), while any edited color derives its hover/soft/dim shades.
+ * default theme resolves to the shipped indigo palette (pixel-identical
+ * to the CSS fallback until an admin saves), while any edited color derives
+ * its hover/soft/dim shades.
  */
 export function resolveThemeVars(theme: ThemeColors): ThemeVars {
   const colors = sanitizeTheme(theme);
@@ -82,7 +83,7 @@ export function resolveThemeVars(theme: ThemeColors): ThemeVars {
     colors.preset === DEFAULT_THEME.preset &&
     THEME_COLOR_KEYS.every((key) => colors[key] === DEFAULT_THEME[key]);
   if (isUntouchedDefault) {
-    return { ...AUTO_ORANGE_VARS };
+    return { ...AUTO_INDIGO_VARS };
   }
   const blend = (a: string, b: string, weight: number) =>
     mix(a, b, weight).toLowerCase();

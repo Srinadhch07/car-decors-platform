@@ -70,12 +70,12 @@ describe("resolveThemeVars", () => {
     }
   });
 
-  it("offers the untouched default theme exactly as the original palette", () => {
+  it("offers the untouched default theme exactly as the indigo palette", () => {
     const vars = resolveThemeVars(DEFAULT_THEME);
-    expect(vars["--theme-primary"]).toBe("#F97316");
-    expect(vars["--theme-primary-hover"]).toBe("#EA580C");
-    expect(vars["--theme-primary-active"]).toBe("#C2410C");
-    expect(vars["--theme-primary-soft"]).toBe("#FFF7ED");
+    expect(vars["--theme-primary"]).toBe("#363199");
+    expect(vars["--theme-primary-hover"]).toBe("#312C8A");
+    expect(vars["--theme-primary-active"]).toBe("#2A2677");
+    expect(vars["--theme-primary-soft"]).toBe("#E1E0F0");
     expect(vars["--theme-secondary"]).toBe("#111111");
     expect(vars["--theme-surface"]).toBe("#FFFFFF");
     expect(vars["--theme-foreground"]).toBe("#1A1A1A");
@@ -130,6 +130,6 @@ describe("applyTheme", () => {
 
   it("restores defaults for a missing/invalid theme", () => {
     applyTheme(null);
-    expect(document.documentElement.style.getPropertyValue("--theme-primary")).toBe("#F97316");
+    expect(document.documentElement.style.getPropertyValue("--theme-primary")).toBe("#363199");
   });
 });

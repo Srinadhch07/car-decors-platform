@@ -3,12 +3,18 @@ import { Link } from "react-router-dom";
 import { api } from "../../lib/api/client";
 import type { Testimonial } from "../../types/api";
 import { Container, SectionHeading } from "../../components/ui";
+import { useScrollReveal } from "../../lib/motion";
 import { TestimonialCard } from "../testimonials";
 
 const MAX_FEATURED = 6;
 
 export function FeaturedTestimonials() {
   const [items, setItems] = useState<Testimonial[]>([]);
+  const scopeRef = useScrollReveal("[data-reveal]", {
+    y: 32,
+    stagger: 0.08,
+    start: "top 88%",
+  });
 
   useEffect(() => {
     let cancelled = false;
@@ -28,7 +34,7 @@ export function FeaturedTestimonials() {
   if (items.length === 0) return null;
 
   return (
-    <section className="section-y bg-surface-muted">
+    <section ref={scopeRef} className="section-y bg-surface-muted">
       <Container>
         <SectionHeading
           title="What Our Customers Say"
@@ -37,7 +43,9 @@ export function FeaturedTestimonials() {
         />
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {items.map((testimonial) => (
-            <TestimonialCard key={testimonial.id} testimonial={testimonial} />
+            <div key={testimonial.id} data-reveal className="h-full">
+              <TestimonialCard testimonial={testimonial} />
+            </div>
           ))}
         </div>
         <div className="mt-8 text-center">

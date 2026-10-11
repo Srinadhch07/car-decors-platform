@@ -1,9 +1,9 @@
 import type { ThemeColors } from "../../types/api";
 
-/** Default theme — mirrors the original static palette exactly. */
+/** Default theme — mirrors the shipped indigo (#363199) branding. */
 export const DEFAULT_THEME: ThemeColors = {
   preset: "automotive-orange",
-  primary: "#F97316",
+  primary: "#363199",
   secondary: "#111111",
   accent: "#FFFFFF",
   background: "#FFFFFF",

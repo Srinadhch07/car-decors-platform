@@ -11,5 +11,5 @@
     <circle cx="24" cy="58" r="8" fill="#525252"/>
     <circle cx="72" cy="58" r="8" fill="#525252"/>
   </g>
-  <rect x="160" y="240" width="80" height="2" fill="#ea580c" opacity="0.25"/>
+  <rect x="160" y="240" width="80" height="2" fill="#363199" opacity="0.25"/>
 </svg>

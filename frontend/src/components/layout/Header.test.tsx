@@ -1,8 +1,14 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { useLocation } from "react-router-dom";
 import { describe, expect, it } from "vitest";
 import { Header } from "./Header";
 import { TestWrapper, createMockState, mockShopSettings } from "../../test-utils";
+
+function LocationProbe() {
+  const location = useLocation();
+  return <span data-testid="location">{location.pathname + location.search}</span>;
+}
 
 describe("Header", () => {
   it("renders navigation links", () => {
@@ -17,6 +23,39 @@ describe("Header", () => {
   it("renders shop name from settings", () => {
     render(<Header />, { wrapper: TestWrapper });
     expect(screen.getAllByText(mockShopSettings.shop_name).length).toBeGreaterThan(0);
+  });
+
+  it("renders the brand tagline", () => {
+    render(<Header />, { wrapper: TestWrapper });
+    expect(screen.getAllByText("Real Value Car Decors").length).toBeGreaterThan(0);
+  });
+
+  it("renders a working search control", async () => {
+    const user = userEvent.setup();
+    render(
+      <>
+        <Header />
+        <LocationProbe />
+      </>,
+      { wrapper: TestWrapper },
+    );
+
+    const search = screen.getByRole("searchbox", { name: /search accessories/i });
+    expect(search).toBeInTheDocument();
+
+    await user.type(search, "seat covers{Enter}");
+    expect(screen.getByTestId("location")).toHaveTextContent("/products?search=seat%20covers");
+  });
+
+  it("provides a search control inside the mobile menu", async () => {
+    const user = userEvent.setup();
+    render(<Header />, { wrapper: TestWrapper });
+
+    await user.click(screen.getByRole("button", { name: /open menu/i }));
+    const mobileNav = screen.getByLabelText("Mobile navigation");
+    expect(
+      within(mobileNav).getByRole("searchbox", { name: /search accessories/i }),
+    ).toBeInTheDocument();
   });
 
   it("falls back to default brand when loading", () => {

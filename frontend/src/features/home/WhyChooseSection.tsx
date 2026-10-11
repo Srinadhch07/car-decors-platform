@@ -64,7 +64,7 @@ export function WhyChooseSection() {
             <div
               key={reason.title}
               data-reveal
-              className="group rounded-lg border border-dark-700 bg-dark-800 p-6 text-center transition-colors hover:border-orange-600/30"
+              className="group rounded-lg border border-dark-700 bg-dark-800 p-6 text-center transition-all duration-300 hover:-translate-y-1 hover:border-orange-600/40 hover:shadow-card-hover"
             >
               <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-orange-600/10">
                 <reason.icon

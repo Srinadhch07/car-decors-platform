@@ -29,11 +29,11 @@ export function HeroSearch() {
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         placeholder="Search car accessories..."
-        className="flex-1 bg-transparent px-4 py-3 text-sm text-white placeholder-gray-500 outline-none sm:py-3.5"
+        className="min-w-0 flex-1 bg-transparent px-4 py-3 text-sm text-white placeholder-gray-500 outline-none sm:py-3.5"
       />
       <button
         type="submit"
-        className="inline-flex items-center gap-2 bg-orange-600 px-5 py-3 text-sm font-medium text-white transition-colors hover:bg-orange-700 sm:py-3.5"
+        className="inline-flex shrink-0 items-center gap-2 bg-orange-600 px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-orange-700 sm:px-5 sm:py-3.5"
         aria-label="Search"
       >
         <Search className="h-4 w-4" />
