@@ -83,6 +83,12 @@
   --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.06);
   --shadow-card-hover: 0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06);
   --shadow-elevated: 0 8px 24px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06);
+  --shadow-floating: 0 16px 40px rgba(0, 0, 0, 0.16), 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* Focus ring colour that re-themes with the saved admin theme */
+@theme inline {
+  --ring-ring: var(--theme-primary-light);
 }
 
 /* ─── Global Base ─── */
@@ -98,6 +104,13 @@
     font-family: var(--font-sans);
     color: var(--theme-foreground);
     background-color: var(--theme-surface);
+  }
+
+  /* Editorial headline rhythm: headings wrap as clean balanced shapes */
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
   }
 
   img {
@@ -162,6 +175,111 @@
     -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
+  }
+
+  /* ── Redesign system utilities ─────────────────────────────── */
+
+  /* Section kicker — small uppercase eyebrow used above headings */
+  .eyebrow {
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--theme-primary-light);
+  }
+
+  /* Consistent form controls (inputs / selects / textarea) */
+  .field {
+    width: 100%;
+    border-radius: 0.625rem;
+    border: 1px solid var(--theme-border);
+    background-color: var(--theme-surface);
+    padding: 0.625rem 0.875rem;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    color: var(--theme-foreground);
+    outline: none;
+    transition:
+      border-color 0.15s ease,
+      box-shadow 0.15s ease,
+      background-color 0.15s ease;
+  }
+
+  .field::placeholder {
+    color: var(--theme-foreground-muted);
+  }
+
+  .field:focus {
+    border-color: var(--theme-primary-light);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--theme-primary) 18%, transparent);
+  }
+
+  .field-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--theme-foreground-secondary);
+  }
+
+  /* Cinematic dark page-banner strip shared by inner page headers */
+  .page-banner {
+    position: relative;
+    overflow: hidden;
+    background-color: var(--theme-secondary);
+    color: var(--theme-foreground-inverse);
+  }
+
+  .page-banner::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+      radial-gradient(
+        55% 130% at 15% 110%,
+        color-mix(in srgb, var(--theme-primary) 26%, transparent),
+        transparent 60%
+      ),
+      radial-gradient(
+        65% 140% at 100% 0%,
+        color-mix(in srgb, var(--theme-foreground-inverse) 7%, transparent),
+        transparent 55%
+      );
+  }
+
+  /* Diagonal hairline "carbon" texture for dark accents */
+  .carbon-texture {
+    background-image: repeating-linear-gradient(
+      -45deg,
+      rgba(255, 255, 255, 0.035) 0 1px,
+      transparent 1px 14px
+    );
+  }
+
+  /* Shared light card surface */
+  .card-surface {
+    background-color: var(--theme-surface);
+    border: 1px solid var(--theme-border-light);
+    border-radius: 1rem;
+    box-shadow: var(--shadow-card);
+  }
+
+  /* Automotive speed-line divider */
+  .divider-flow {
+    position: relative;
+    height: 0.5rem;
+    background-image: repeating-linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--theme-primary) 55%, transparent) 0 6px,
+      transparent 6px 16px
+    );
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+    mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+    opacity: 0.35;
   }
 }
 

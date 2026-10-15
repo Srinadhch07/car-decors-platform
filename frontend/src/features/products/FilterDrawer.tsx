@@ -47,15 +47,28 @@ export function FilterDrawer({ open, onClose, children }: FilterDrawerProps) {
       <div
         role="dialog"
         aria-label="Filters"
-        className={`absolute inset-y-0 left-0 flex w-80 max-w-[85vw] flex-col bg-white shadow-elevated transition-transform duration-300 ${open ? "translate-x-0" : "-translate-x-full"}`}
+        className={`absolute inset-y-0 left-0 flex w-80 max-w-[85vw] flex-col bg-white shadow-floating transition-transform duration-300 ${open ? "translate-x-0" : "-translate-x-full"}`}
       >
-        <div className="flex items-center justify-between border-b border-border-light px-4 py-3">
-          <h2 className="text-base font-semibold text-text-primary">Filters</h2>
+        <div className="relative flex items-center justify-between overflow-hidden border-b border-border-light bg-dark-900 px-4 py-4">
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0"
+            style={{
+              backgroundImage:
+                "radial-gradient(50% 120% at 20% 120%, color-mix(in srgb, var(--theme-primary) 22%, transparent), transparent 60%)",
+            }}
+          />
+          <h2 className="relative text-base font-semibold text-white">
+            <span className="mr-2 text-xs font-semibold uppercase tracking-[0.25em] text-orange-400">
+              Refine
+            </span>
+            Filters
+          </h2>
           <button
             ref={closeRef}
             type="button"
             onClick={onClose}
-            className="rounded-md p-2 text-text-secondary hover:bg-surface-muted"
+            className="relative rounded-md p-2 text-white/80 transition-colors hover:bg-white/10 hover:text-white"
             aria-label="Close filters"
           >
             <X className="h-5 w-5" />

@@ -42,6 +42,7 @@ export function CategorySection() {
         <SectionHeading
           title="Shop by Category"
           subtitle="Browse our range of car accessories and decor"
+          eyebrow="Collections"
           action={
             categories.length > 0 ? (
               <Link

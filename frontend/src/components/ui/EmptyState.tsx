@@ -12,8 +12,10 @@ export function EmptyState({
   action,
 }: EmptyStateProps) {
   return (
-    <div className="flex flex-col items-center justify-center py-16 text-center">
-      <PackageOpen className="mb-4 h-12 w-12 text-text-muted" />
+    <div className="flex flex-col items-center justify-center rounded-2xl py-16 text-center">
+      <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-surface-muted">
+        <PackageOpen className="h-7 w-7 text-text-muted" />
+      </div>
       <h3 className="mb-1 text-lg font-semibold text-text-primary">{title}</h3>
       <p className="mb-4 max-w-sm text-text-secondary">{description}</p>
       {action}

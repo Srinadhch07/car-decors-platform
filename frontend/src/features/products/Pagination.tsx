@@ -24,12 +24,15 @@ export function Pagination({ page, totalPages, onPageChange }: PaginationProps) 
   const pages = getPageNumbers(page, totalPages);
 
   return (
-    <nav aria-label="Pagination" className="flex items-center justify-center gap-1">
+    <nav
+      aria-label="Pagination"
+      className="flex items-center justify-center gap-1.5"
+    >
       <button
         type="button"
         onClick={() => onPageChange(page - 1)}
         disabled={page <= 1}
-        className="inline-flex items-center gap-1 rounded-md border border-border-light bg-white px-3 py-2 text-sm font-medium text-text-secondary transition-colors hover:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-40"
+        className="inline-flex items-center gap-1 rounded-lg border border-border-light bg-white px-3 py-2 text-sm font-medium text-text-secondary transition-colors hover:border-orange-500/40 hover:text-orange-600 disabled:cursor-not-allowed disabled:opacity-40"
         aria-label="Previous page"
       >
         <ChevronLeft className="h-4 w-4" />
@@ -48,10 +51,10 @@ export function Pagination({ page, totalPages, onPageChange }: PaginationProps) 
             onClick={() => onPageChange(p)}
             aria-label={`Page ${p}`}
             aria-current={p === page ? "page" : undefined}
-            className={`inline-flex h-10 w-10 items-center justify-center rounded-md text-sm font-medium transition-colors ${
+            className={`inline-flex h-10 w-10 items-center justify-center rounded-lg text-sm font-medium transition-colors ${
               p === page
-                ? "bg-orange-600 text-white"
-                : "border border-border-light bg-white text-text-secondary hover:bg-surface-muted"
+                ? "bg-orange-600 text-white shadow-card"
+                : "border border-border-light bg-white text-text-secondary hover:border-orange-500/40 hover:text-orange-600"
             }`}
           >
             {p}
@@ -63,7 +66,7 @@ export function Pagination({ page, totalPages, onPageChange }: PaginationProps) 
         type="button"
         onClick={() => onPageChange(page + 1)}
         disabled={page >= totalPages}
-        className="inline-flex items-center gap-1 rounded-md border border-border-light bg-white px-3 py-2 text-sm font-medium text-text-secondary transition-colors hover:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-40"
+        className="inline-flex items-center gap-1 rounded-lg border border-border-light bg-white px-3 py-2 text-sm font-medium text-text-secondary transition-colors hover:border-orange-500/40 hover:text-orange-600 disabled:cursor-not-allowed disabled:opacity-40"
         aria-label="Next page"
       >
         <span className="hidden sm:inline">Next</span>

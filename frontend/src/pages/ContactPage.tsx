@@ -44,14 +44,24 @@ export function ContactPage() {
   };
 
   return (
-    <section className="section-y">
+    <section className="min-h-screen">
       <SeoHead data={seo} />
-      <Container>
-        <SectionHeading
-          title="Contact Us"
-          subtitle="We'd love to hear from you. Get in touch with us."
-          centered
-        />
+      {/* Page banner */}
+      <section className="page-banner border-b border-dark-700">
+        <div className="absolute inset-0 carbon-texture" aria-hidden="true" />
+        <Container className="relative py-12 sm:py-16">
+          <SectionHeading
+            title="Contact Us"
+            subtitle="We'd love to hear from you. Get in touch with us."
+            centered
+            eyebrow="We're Here to Help"
+            tone="dark"
+            className="mb-0"
+          />
+        </Container>
+      </section>
+
+      <Container className="py-10 sm:py-12">
         <ContactInfo />
       </Container>
     </section>

@@ -23,8 +23,12 @@ export function ContactCTA() {
       <Container>
         <div
           data-reveal
-          className="rounded-xl border border-border-light border-t-2 border-t-orange-600 bg-white p-8 text-center shadow-card sm:p-10"
+          className="card-surface relative overflow-hidden p-8 text-center sm:p-10"
         >
+          <div
+            aria-hidden="true"
+            className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-transparent via-orange-600/60 to-transparent"
+          />
           <h2 className="text-xl font-bold tracking-tight text-text-primary sm:text-2xl">
             Ready to Upgrade Your Ride?
           </h2>
@@ -38,7 +42,7 @@ export function ContactCTA() {
                 href={buildWhatsAppUrl(shop!.whatsapp_number)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-lg bg-green-600 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-green-700"
+                className="inline-flex items-center gap-2 rounded-xl bg-green-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-green-700"
               >
                 <MessageCircle className="h-4 w-4" />
                 WhatsApp Us
@@ -47,7 +51,7 @@ export function ContactCTA() {
             {hasPhone && (
               <a
                 href={`tel:${shop!.phone}`}
-                className="inline-flex items-center gap-2 rounded-lg bg-orange-600 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-orange-700"
+                className="inline-flex items-center gap-2 rounded-xl bg-orange-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-orange-700"
               >
                 <Phone className="h-4 w-4" />
                 Call Us
@@ -56,7 +60,7 @@ export function ContactCTA() {
             {hasEmail && (
               <a
                 href={`mailto:${shop!.email}`}
-                className="inline-flex items-center gap-2 rounded-lg border border-border px-5 py-2.5 text-sm font-medium text-text-primary transition-colors hover:bg-surface-muted"
+                className="inline-flex items-center gap-2 rounded-xl border border-border bg-white px-5 py-2.5 text-sm font-medium text-text-primary transition-colors hover:bg-surface-muted"
               >
                 <Mail className="h-4 w-4" />
                 Email Us

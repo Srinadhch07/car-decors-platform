@@ -42,6 +42,7 @@ export function FeaturedProducts() {
         <SectionHeading
           title="Featured Products"
           subtitle="Handpicked accessories for your ride"
+          eyebrow="Handpicked"
           action={
             products.length > 0 ? (
               <Link

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, ExternalLink, MessageCircle, Phone } from "lucide-react";
+import { ArrowLeft, ChevronRight, ExternalLink, MessageCircle, Phone } from "lucide-react";
 import type { Category, Product } from "../../types/api";
 import { ApiRequestError, api } from "../../lib/api/client";
 import { formatPrice, availabilityLabel, truncate } from "../../lib/utils/format";
@@ -20,6 +20,12 @@ import {
 
 interface ProductDetailProps {
   slug: string;
+}
+
+function BreadcrumbSeparator() {
+  return (
+    <ChevronRight className="h-3.5 w-3.5 shrink-0 text-text-muted" aria-hidden="true" />
+  );
 }
 
 export function ProductDetail({ slug }: ProductDetailProps) {
@@ -196,26 +202,26 @@ export function ProductDetail({ slug }: ProductDetailProps) {
       <section className="border-b border-border-light bg-surface-muted">
         <Container className="py-3">
           <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-sm text-text-muted">
-            <Link to="/" className="hover:text-orange-600">
+            <Link to="/" className="transition-colors hover:text-orange-600">
               Home
             </Link>
-            <span aria-hidden="true">/</span>
-            <Link to="/products" className="hover:text-orange-600">
+            <BreadcrumbSeparator />
+            <Link to="/products" className="transition-colors hover:text-orange-600">
               Products
             </Link>
             {category && (
               <>
-                <span aria-hidden="true">/</span>
+                <BreadcrumbSeparator />
                 <Link
                   to={`/categories/${category.slug}`}
-                  className="hover:text-orange-600"
+                  className="transition-colors hover:text-orange-600"
                 >
                   {category.name}
                 </Link>
               </>
             )}
-            <span aria-hidden="true">/</span>
-            <span className="text-text-primary font-medium truncate">{product.name}</span>
+            <BreadcrumbSeparator />
+            <span className="truncate font-medium text-text-primary">{product.name}</span>
           </nav>
         </Container>
       </section>
@@ -225,30 +231,43 @@ export function ProductDetail({ slug }: ProductDetailProps) {
         <Container>
           <div className="grid gap-8 md:grid-cols-2 lg:gap-12">
             {/* Image */}
-            <div className="relative aspect-square overflow-hidden rounded-lg border border-border-light bg-surface-muted">
-              {product.image_url ? (
-                <img
-                  src={product.image_url}
-                  alt={product.name}
-                  className="h-full w-full object-cover"
-                  onError={(e) => {
-                    e.currentTarget.src = "/images/product-fallback.svg";
-                  }}
-                />
-              ) : (
-                <img
-                  src="/images/product-fallback.svg"
-                  alt=""
-                  className="h-full w-full object-cover opacity-60"
-                  aria-hidden="true"
-                />
-              )}
-              {/* Availability badge */}
-              <div className="absolute top-3 left-3">
-                <Badge variant={availVariant}>
-                  {availabilityLabel(product.availability)}
-                </Badge>
+            <div className="relative">
+              <div className="relative aspect-square overflow-hidden rounded-2xl border border-border-light bg-surface-muted shadow-card">
+                {product.image_url ? (
+                  <img
+                    src={product.image_url}
+                    alt={product.name}
+                    className="h-full w-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.src = "/images/product-fallback.svg";
+                    }}
+                  />
+                ) : (
+                  <img
+                    src="/images/product-fallback.svg"
+                    alt=""
+                    className="h-full w-full object-cover opacity-60"
+                    aria-hidden="true"
+                  />
+                )}
+                {/* Availability badge */}
+                <div className="absolute top-3 left-3">
+                  <Badge variant={availVariant}>
+                    {availabilityLabel(product.availability)}
+                  </Badge>
+                </div>
+                {/* Hover accent bar */}
+                <div className="absolute bottom-0 left-0 h-0.5 w-full bg-gradient-to-r from-transparent via-orange-600/50 to-transparent" />
               </div>
+              {/* Soft theme glow behind the image */}
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute -inset-3 -z-10 rounded-3xl"
+                style={{
+                  background:
+                    "radial-gradient(55% 55% at 50% 40%, color-mix(in srgb, var(--theme-primary) 12%, transparent), transparent 70%)",
+                }}
+              />
             </div>
 
             {/* Info */}
@@ -292,7 +311,7 @@ export function ProductDetail({ slug }: ProductDetailProps) {
                     href={whatsappUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center gap-2 rounded-md bg-orange-600 px-6 py-3 text-base font-medium text-white transition-colors hover:bg-orange-700 active:bg-orange-800 shadow-sm sm:w-auto"
+                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-green-600 px-6 py-3 text-base font-medium text-white shadow-sm transition-colors hover:bg-green-700 active:bg-green-800 sm:w-auto"
                   >
                     <MessageCircle className="h-5 w-5" />
                     Enquire on WhatsApp
@@ -305,7 +324,7 @@ export function ProductDetail({ slug }: ProductDetailProps) {
                 <div className="mt-8">
                   <a
                     href={`tel:${shop!.phone}`}
-                    className="inline-flex items-center justify-center gap-2 rounded-md bg-orange-600 px-6 py-3 text-base font-medium text-white transition-colors hover:bg-orange-700 active:bg-orange-800 shadow-sm sm:w-auto"
+                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-orange-600 px-6 py-3 text-base font-medium text-white shadow-sm transition-colors hover:bg-orange-700 active:bg-orange-800 sm:w-auto"
                   >
                     <Phone className="h-5 w-5" />
                     Call Us
@@ -320,7 +339,7 @@ export function ProductDetail({ slug }: ProductDetailProps) {
                     href={product.external_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center gap-2 rounded-md border border-border bg-white px-6 py-3 text-base font-medium text-text-secondary transition-colors hover:bg-surface-muted active:bg-surface-muted sm:w-auto"
+                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-white px-6 py-3 text-base font-medium text-text-secondary shadow-sm transition-colors hover:border-orange-500/40 hover:text-orange-600 active:bg-surface-muted sm:w-auto"
                   >
                     <ExternalLink className="h-5 w-5" />
                     View More

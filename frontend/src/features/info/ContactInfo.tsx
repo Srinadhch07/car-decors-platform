@@ -107,25 +107,37 @@ export function ContactInfo() {
       </div>
 
       {/* WhatsApp CTA */}
-      <div className="flex flex-col items-center justify-center rounded-lg border border-border-light bg-surface-muted p-8 text-center">
-        <MessageCircle className="mb-4 h-12 w-12 text-orange-600" />
-        <h3 className="mb-2 text-lg font-bold text-text-primary">
-          Chat on WhatsApp
-        </h3>
-        <p className="mb-6 max-w-sm text-sm text-text-secondary">
-          Have a question about our products or services? Send us a message on WhatsApp for a quick response.
-        </p>
-        {whatsappUrl && (
-          <a
-            href={whatsappUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 rounded-md bg-orange-600 px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-orange-700 active:bg-orange-800 shadow-sm"
-          >
-            <MessageCircle className="h-4 w-4" />
-            Start Chat
-          </a>
-        )}
+      <div className="card-surface relative flex flex-col items-center justify-center overflow-hidden p-8 text-center">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -inset-4"
+          style={{
+            background:
+              "radial-gradient(50% 60% at 50% 0%, color-mix(in srgb, var(--theme-primary) 10%, transparent), transparent 70%)",
+          }}
+        />
+        <div className="relative flex flex-col items-center">
+          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-green-600/10">
+            <MessageCircle className="h-8 w-8 text-green-600" />
+          </div>
+          <h3 className="mb-2 text-lg font-bold text-text-primary">
+            Chat on WhatsApp
+          </h3>
+          <p className="mb-6 max-w-sm text-sm text-text-secondary">
+            Have a question about our products or services? Send us a message on WhatsApp for a quick response.
+          </p>
+          {whatsappUrl && (
+            <a
+              href={whatsappUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-xl bg-green-600 px-6 py-3 text-sm font-medium text-white shadow-sm transition-colors hover:bg-green-700 active:bg-green-800"
+            >
+              <MessageCircle className="h-4 w-4" />
+              Start Chat
+            </a>
+          )}
+        </div>
       </div>
     </div>
   );

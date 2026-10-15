@@ -19,13 +19,13 @@ export function ActiveFilters({ filters, onRemove, onClearAll }: ActiveFiltersPr
       {filters.map((chip) => (
         <span
           key={chip.key}
-          className="inline-flex items-center gap-1 rounded-full border border-border-light bg-surface-muted px-3 py-1 text-xs font-medium text-text-secondary"
+          className="inline-flex items-center gap-1.5 rounded-full border border-orange-600/20 bg-orange-50 px-3 py-1 text-xs font-medium text-text-secondary"
         >
           {chip.label}
           <button
             type="button"
             onClick={() => onRemove(chip.key)}
-            className="ml-0.5 rounded-full p-0.5 transition-colors hover:bg-surface-dim"
+            className="ml-0.5 rounded-full p-0.5 text-text-muted transition-colors hover:bg-surface-dim hover:text-text-primary"
             aria-label={`Remove ${chip.label} filter`}
           >
             <X className="h-3 w-3" />

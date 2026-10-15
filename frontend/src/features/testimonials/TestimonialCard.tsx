@@ -25,9 +25,11 @@ function Rating({ rating }: { rating: number }) {
 
 export function TestimonialCard({ testimonial }: TestimonialCardProps) {
   return (
-    <figure className="flex h-full flex-col rounded-lg border border-border-light bg-white p-5 shadow-sm">
-      <Quote className="h-6 w-6 text-orange-500" aria-hidden="true" />
-      <blockquote className="mt-3 flex-1 whitespace-pre-line text-sm leading-relaxed text-text-secondary">
+    <figure className="card-surface flex h-full flex-col p-5">
+      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-600/10">
+        <Quote className="h-5 w-5 text-orange-500" aria-hidden="true" />
+      </div>
+      <blockquote className="mt-4 flex-1 whitespace-pre-line text-sm leading-relaxed text-text-secondary">
         {testimonial.text}
       </blockquote>
       <figcaption className="mt-4 flex items-center justify-between gap-3 border-t border-border-light pt-3">

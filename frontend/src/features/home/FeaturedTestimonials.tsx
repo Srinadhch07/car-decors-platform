@@ -40,6 +40,7 @@ export function FeaturedTestimonials() {
           title="What Our Customers Say"
           subtitle="Real feedback from customers who trusted us with their cars."
           centered
+          eyebrow="Reviews"
         />
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {items.map((testimonial) => (
@@ -51,7 +52,7 @@ export function FeaturedTestimonials() {
         <div className="mt-8 text-center">
           <Link
             to="/testimonials"
-            className="inline-flex items-center gap-2 rounded-md bg-orange-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-orange-700 active:bg-orange-800"
+            className="inline-flex items-center gap-2 rounded-xl bg-orange-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-orange-700 active:bg-orange-800"
           >
             Read all testimonials
           </Link>

@@ -18,19 +18,35 @@ export function AboutPage() {
   };
 
   return (
-    <section className="section-y">
+    <div>
       <SeoHead data={seo} />
-      <Container>
+      {/* Page banner */}
+      <section className="page-banner border-b border-dark-700">
+        <div className="absolute inset-0 carbon-texture" aria-hidden="true" />
+        <Container className="relative py-12 text-center sm:py-16">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.25em] text-orange-400 sm:text-sm">
+            Our Story
+          </p>
+          <h1 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
+            About Us
+          </h1>
+          <p className="mx-auto mt-3 max-w-xl text-gray-400">
+            A trusted name in car accessories and decor — helping you personalise and protect your ride.
+          </p>
+        </Container>
+      </section>
+
+      <Container className="py-12 sm:py-16">
         <AboutSection />
         <div className="mt-12 text-center">
           <Link
             to="/products"
-            className="inline-flex items-center gap-2 rounded-md bg-orange-600 px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-orange-700 active:bg-orange-800 shadow-sm"
+            className="inline-flex items-center gap-2 rounded-xl bg-orange-600 px-6 py-3 text-sm font-medium text-white shadow-sm transition-colors hover:bg-orange-700 active:bg-orange-800"
           >
             Browse Our Products
           </Link>
         </div>
       </Container>
-    </section>
+    </div>
   );
 }

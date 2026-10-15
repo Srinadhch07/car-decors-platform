@@ -47,9 +47,11 @@ export function AboutSection() {
         {features.map((feat) => (
           <div
             key={feat.title}
-            className="rounded-lg border border-border-light bg-white p-6 text-center shadow-card"
+            className="card-surface p-6 text-center"
           >
-            <feat.icon className="mx-auto mb-3 h-8 w-8 text-orange-600" />
+            <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-orange-600/10">
+              <feat.icon className="h-7 w-7 text-orange-600" aria-hidden="true" />
+            </div>
             <h3 className="mb-2 text-sm font-bold text-text-primary sm:text-base">
               {feat.title}
             </h3>

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ChevronRight } from "lucide-react";
 import type { Category, ProductListPage, Subcategory } from "../../types/api";
 import { ApiRequestError, api } from "../../lib/api/client";
 import { Container, EmptyState, ErrorState } from "../../components/ui";
@@ -262,55 +262,56 @@ export function CategoryDetail({ slug }: CategoryDetailProps) {
       <section className="border-b border-border-light bg-surface-muted">
         <Container className="py-3">
           <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-sm text-text-muted">
-            <Link to="/" className="hover:text-orange-600">
+            <Link to="/" className="transition-colors hover:text-orange-600">
               Home
             </Link>
-            <span aria-hidden="true">/</span>
-            <Link to="/products" className="hover:text-orange-600">
+            <ChevronRight className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+            <Link to="/products" className="transition-colors hover:text-orange-600">
               Products
             </Link>
-            <span aria-hidden="true">/</span>
-            <span className="text-text-primary font-medium">{category.name}</span>
+            <ChevronRight className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+            <span className="font-medium text-text-primary">{category.name}</span>
           </nav>
         </Container>
       </section>
 
       {/* Category hero */}
-      <section className="border-b border-border-light bg-white">
-        <Container className="py-8 sm:py-10">
-          <div className="flex flex-col items-center gap-6 sm:flex-row sm:gap-10">
-            {/* Category image */}
-            <div className="relative h-32 w-32 shrink-0 overflow-hidden rounded-lg border border-border-light bg-surface-muted sm:h-44 sm:w-44">
-              {category.image_url ? (
-                <img
-                  src={category.image_url}
-                  alt={category.name}
-                  className="h-full w-full object-cover"
-                  onError={(e) => {
-                    e.currentTarget.src = "/images/category-fallback.svg";
-                  }}
-                />
-              ) : (
-                <img
-                  src="/images/category-fallback.svg"
-                  alt=""
-                  className="h-full w-full object-cover opacity-60"
-                  aria-hidden="true"
-                />
-              )}
-            </div>
+      <section className="page-banner border-b border-dark-700">
+        {/* Backdrop */}
+        {category.image_url ? (
+          <div className="absolute inset-0">
+            <img
+              src={category.image_url}
+              alt={category.name}
+              className="h-full w-full object-cover opacity-30"
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-dark-950/70 via-dark-950/60 to-dark-950/70" />
+          </div>
+        ) : (
+          <div className="absolute inset-0">
+            <img
+              src="/images/category-fallback.svg"
+              alt=""
+              aria-hidden="true"
+              className="h-full w-full object-cover opacity-20"
+            />
+            <div className="absolute inset-0 carbon-texture" />
+          </div>
+        )}
 
-            {/* Heading */}
-            <div className="min-w-0 flex-1 text-center sm:text-left">
-              <h1 className="text-2xl font-bold tracking-tight text-text-primary sm:text-3xl">
-                {category.name}
-              </h1>
-              {category.description && (
-                <p className="mx-auto mt-2 max-w-xl leading-relaxed text-text-secondary sm:mx-0">
-                  {category.description}
-                </p>
-              )}
-            </div>
+        <Container className="relative py-10 sm:py-14">
+          <div className="max-w-2xl">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.25em] text-orange-400 sm:text-sm">
+              Category
+            </p>
+            <h1 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
+              {category.name}
+            </h1>
+            {category.description && (
+              <p className="mt-3 max-w-xl leading-relaxed text-gray-400">
+                {category.description}
+              </p>
+            )}
           </div>
         </Container>
       </section>
@@ -324,8 +325,8 @@ export function CategoryDetail({ slug }: CategoryDetailProps) {
               onClick={() => updateParam("subcategory", "")}
               className={`rounded-full border px-4 py-1.5 text-sm font-medium transition-colors ${
                 !subcategory
-                  ? "border-orange-600 bg-orange-600 text-white"
-                  : "border-border-light bg-white text-text-secondary hover:bg-surface-muted"
+                  ? "border-orange-600 bg-orange-600 text-white shadow-card"
+                  : "border-border-light bg-white text-text-secondary hover:border-orange-500/40 hover:text-orange-600"
               }`}
             >
               All {category.name}
@@ -337,8 +338,8 @@ export function CategoryDetail({ slug }: CategoryDetailProps) {
                 onClick={() => updateParam("subcategory", sub.slug)}
                 className={`rounded-full border px-4 py-1.5 text-sm font-medium transition-colors ${
                   subcategory === sub.slug
-                    ? "border-orange-600 bg-orange-600 text-white"
-                    : "border-border-light bg-white text-text-secondary hover:bg-surface-muted"
+                    ? "border-orange-600 bg-orange-600 text-white shadow-card"
+                    : "border-border-light bg-white text-text-secondary hover:border-orange-500/40 hover:text-orange-600"
                 }`}
               >
                 {sub.name}
@@ -365,7 +366,7 @@ export function CategoryDetail({ slug }: CategoryDetailProps) {
               id="cat-sort"
               value={sort}
               onChange={(e) => updateParam("sort", e.target.value)}
-              className="rounded-md border border-border-light bg-white px-3 py-2 text-sm text-text-primary outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+              className="field w-56"
             >
               {sortOptions.map((opt) => (
                 <option key={opt.value} value={opt.value}>

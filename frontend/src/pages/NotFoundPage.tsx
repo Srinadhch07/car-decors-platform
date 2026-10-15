@@ -9,7 +9,7 @@ export function NotFoundPage() {
   const brand = shop?.shop_name ?? FALLBACK_BRAND;
 
   return (
-    <section className="section-y">
+    <div className="min-h-screen">
       <SeoHead
         data={{
           title: `Page Not Found | ${brand}`,
@@ -17,19 +17,27 @@ export function NotFoundPage() {
           noIndex: true,
         }}
       />
-      <Container className="flex flex-col items-center text-center">
-        <h1 className="mb-2 text-6xl font-bold text-text-muted">404</h1>
-        <h2 className="mb-4 text-xl font-semibold">Page Not Found</h2>
-        <p className="mb-6 text-text-secondary">
-          The page you're looking for doesn't exist or has been moved.
-        </p>
-        <Link
-          to="/"
-          className="rounded-md bg-orange-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-orange-700"
-        >
-          Back to Home
-        </Link>
-      </Container>
-    </section>
+      <section className="page-banner min-h-[60vh]">
+        <div className="absolute inset-0 carbon-texture" aria-hidden="true" />
+        <Container className="relative flex min-h-[60vh] flex-col items-center justify-center text-center">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.25em] text-orange-400 sm:text-sm">
+            Lost Your Way?
+          </p>
+          <h1 className="mb-3 bg-gradient-to-b from-white/90 to-white/40 bg-clip-text text-[clamp(4rem,10vw,8rem)] font-bold leading-none tracking-tight text-transparent">
+            404
+          </h1>
+          <h2 className="mb-4 text-xl font-semibold text-white">Page Not Found</h2>
+          <p className="mb-8 text-gray-400">
+            The page you're looking for doesn't exist or has been moved.
+          </p>
+          <Link
+            to="/"
+            className="inline-flex items-center gap-2 rounded-xl bg-orange-600 px-6 py-3 text-sm font-medium text-white shadow-sm transition-colors hover:bg-orange-700 active:bg-orange-800"
+          >
+            Back to Home
+          </Link>
+        </Container>
+      </section>
+    </div>
   );
 }

@@ -300,31 +300,35 @@ export function ProductsPage() {
     <div>
       <SeoHead data={seo} />
       {/* Header */}
-      <section className="border-b border-border-light bg-surface-muted">
-        <Container className="py-8 sm:py-10">
+      <section className="page-banner border-b border-dark-700">
+        <div className="absolute inset-0 carbon-texture" aria-hidden="true" />
+        <Container className="relative py-10 sm:py-14">
           <SectionHeading
             title="All Products"
             subtitle="Browse our range of car accessories and decor"
             centered
+            eyebrow="Showroom"
+            tone="dark"
+            className="mb-6"
           />
 
           {/* Search */}
-          <form onSubmit={handleSearchSubmit} className="mx-auto mt-6 flex max-w-xl items-center">
+          <form onSubmit={handleSearchSubmit} className="mx-auto flex max-w-xl items-center">
             <div className="relative flex-1">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
+              <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
               <input
                 type="search"
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 placeholder="Search products..."
                 aria-label="Search products"
-                className="w-full rounded-l-lg border border-r-0 border-border-light bg-white py-2.5 pl-10 pr-4 text-sm text-text-primary placeholder-text-muted outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                className="w-full rounded-l-xl border border-dark-600 bg-dark-800 py-3 pl-11 pr-10 text-sm text-white placeholder:text-gray-500 outline-none transition-colors focus:border-orange-500"
               />
               {searchInput && (
                 <button
                   type="button"
                   onClick={handleSearchClear}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-0.5 text-text-muted hover:text-text-primary"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-0.5 text-gray-400 hover:text-white"
                   aria-label="Clear search"
                 >
                   <X className="h-4 w-4" />
@@ -333,8 +337,9 @@ export function ProductsPage() {
             </div>
             <button
               type="submit"
-              className="rounded-r-lg bg-orange-600 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-orange-700"
+              className="inline-flex items-center gap-2 rounded-r-xl bg-orange-600 px-5 py-3 text-sm font-medium text-white shadow-sm transition-colors hover:bg-orange-700 active:bg-orange-800"
             >
+              <Search className="h-4 w-4" aria-hidden="true" />
               Search
             </button>
           </form>
@@ -347,7 +352,7 @@ export function ProductsPage() {
           <button
             type="button"
             onClick={openDrawer}
-            className="inline-flex items-center gap-2 rounded-md border border-border-light bg-white px-4 py-2.5 text-sm font-medium text-text-secondary transition-colors hover:bg-surface-muted"
+            className="inline-flex items-center gap-2 rounded-xl border border-border-light bg-white px-4 py-3 text-sm font-medium text-text-secondary shadow-card transition-colors hover:border-orange-500/50 hover:text-orange-600"
             aria-label="Open filters"
           >
             <Filter className="h-4 w-4" />
@@ -361,7 +366,7 @@ export function ProductsPage() {
               id="mobile-sort"
               value={sort}
               onChange={(e) => updateParam("sort", e.target.value)}
-              className="w-full rounded-md border border-border-light bg-white px-3 py-2.5 text-sm text-text-primary outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+              className="field"
             >
               {SORT_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>
@@ -386,14 +391,14 @@ export function ProductsPage() {
           <div className="space-y-6">
             {/* Drawer sort */}
             <div>
-              <label htmlFor="drawer-sort" className="mb-2 block text-sm font-semibold text-text-primary">
+              <label htmlFor="drawer-sort" className="field-label">
                 Sort By
               </label>
               <select
                 id="drawer-sort"
                 value={drawerSort}
                 onChange={(e) => setDrawerSort(e.target.value)}
-                className="w-full rounded-md border border-border-light bg-white px-3 py-2.5 text-sm text-text-primary outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                className="field"
               >
                 {SORT_OPTIONS.map((opt) => (
                   <option key={opt.value} value={opt.value}>
@@ -405,7 +410,7 @@ export function ProductsPage() {
 
             {/* Drawer category */}
             <div>
-              <label htmlFor="drawer-category" className="mb-2 block text-sm font-semibold text-text-primary">
+              <label htmlFor="drawer-category" className="field-label">
                 Category
               </label>
               <select
@@ -415,7 +420,7 @@ export function ProductsPage() {
                   setDrawerCategory(e.target.value);
                   setDrawerSubcategory("");
                 }}
-                className="w-full rounded-md border border-border-light bg-white px-3 py-2.5 text-sm text-text-primary outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                className="field"
               >
                 <option value="">All Categories</option>
                 {categories.map((cat) => (
@@ -429,14 +434,14 @@ export function ProductsPage() {
             {/* Drawer subcategory */}
             {drawerCategory && subcategories.length > 0 && (
               <div>
-                <label htmlFor="drawer-subcategory" className="mb-2 block text-sm font-semibold text-text-primary">
+                <label htmlFor="drawer-subcategory" className="field-label">
                   Subcategory
                 </label>
                 <select
                   id="drawer-subcategory"
                   value={drawerSubcategory}
                   onChange={(e) => setDrawerSubcategory(e.target.value)}
-                  className="w-full rounded-md border border-border-light bg-white px-3 py-2.5 text-sm text-text-primary outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                  className="field"
                 >
                   <option value="">All Subcategories</option>
                   {subcategories.map((sub) => (
@@ -450,7 +455,7 @@ export function ProductsPage() {
 
             {/* Drawer vehicle */}
             <div>
-              <label htmlFor="drawer-vehicle" className="mb-2 block text-sm font-semibold text-text-primary">
+              <label htmlFor="drawer-vehicle" className="field-label">
                 Vehicle
               </label>
               <input
@@ -459,20 +464,20 @@ export function ProductsPage() {
                 value={drawerVehicle}
                 onChange={(e) => setDrawerVehicle(e.target.value)}
                 placeholder="e.g. Hyundai Creta"
-                className="w-full rounded-md border border-border-light bg-white px-3 py-2.5 text-sm text-text-primary placeholder-text-muted outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                className="field"
               />
             </div>
 
             {/* Drawer availability */}
             <div>
-              <label htmlFor="drawer-availability" className="mb-2 block text-sm font-semibold text-text-primary">
+              <label htmlFor="drawer-availability" className="field-label">
                 Availability
               </label>
               <select
                 id="drawer-availability"
                 value={drawerAvailability}
                 onChange={(e) => setDrawerAvailability(e.target.value as ProductAvailability | "")}
-                className="w-full rounded-md border border-border-light bg-white px-3 py-2.5 text-sm text-text-primary outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                className="field"
               >
                 <option value="">All</option>
                 <option value="IN_STOCK">In Stock</option>
@@ -485,7 +490,7 @@ export function ProductsPage() {
             <button
               type="button"
               onClick={applyDrawer}
-              className="w-full rounded-lg bg-orange-600 px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-orange-700"
+              className="w-full rounded-xl bg-orange-600 px-4 py-3 text-sm font-medium text-white shadow-sm transition-colors hover:bg-orange-700 active:bg-orange-800"
             >
               Apply Filters
             </button>
@@ -494,14 +499,16 @@ export function ProductsPage() {
 
         <div className="flex gap-8">
           {/* Desktop sidebar */}
-          <aside className="hidden w-56 shrink-0 md:block">
-            <div className="sticky top-20">{filterContent}</div>
+          <aside className="hidden w-60 shrink-0 md:block">
+            <div className="sticky top-24">
+              <div className="card-surface p-5">{filterContent}</div>
+            </div>
           </aside>
 
           {/* Main content */}
           <div className="min-w-0 flex-1">
             {/* Result count + desktop sort */}
-            <div className="mb-4 flex items-center justify-between">
+            <div className="mb-5 flex items-center justify-between gap-3">
               {loading ? (
                 <div className="h-5 w-32 animate-pulse rounded bg-surface-muted" />
               ) : products ? (
@@ -519,7 +526,7 @@ export function ProductsPage() {
                   id="desktop-sort"
                   value={sort}
                   onChange={(e) => updateParam("sort", e.target.value)}
-                  className="rounded-md border border-border-light bg-white px-3 py-2 text-sm text-text-primary outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                  className="field w-56"
                 >
                   {SORT_OPTIONS.map((opt) => (
                     <option key={opt.value} value={opt.value}>
@@ -567,7 +574,7 @@ export function ProductsPage() {
                     <button
                       type="button"
                       onClick={handleClearAll}
-                      className="rounded-md bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700"
+                      className="rounded-lg bg-orange-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-orange-700 active:bg-orange-800"
                     >
                       Clear Filters
                     </button>

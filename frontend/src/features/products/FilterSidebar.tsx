@@ -31,17 +31,17 @@ export function FilterSidebar({
   onVehicleChange,
 }: FilterSidebarProps) {
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Sort */}
       <div>
-        <label htmlFor="filter-sort" className="mb-2 block text-sm font-semibold text-text-primary">
+        <label htmlFor="filter-sort" className="field-label">
           Sort By
         </label>
         <select
           id="filter-sort"
           value={selectedSort}
           onChange={(e) => onSortChange(e.target.value)}
-          className="w-full rounded-md border border-border-light bg-white px-3 py-2.5 text-sm text-text-primary outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+          className="field"
         >
           <option value="newest">Newest First</option>
           <option value="oldest">Oldest First</option>
@@ -54,14 +54,14 @@ export function FilterSidebar({
 
       {/* Category */}
       <div>
-        <label htmlFor="filter-category" className="mb-2 block text-sm font-semibold text-text-primary">
+        <label htmlFor="filter-category" className="field-label">
           Category
         </label>
         <select
           id="filter-category"
           value={selectedCategory}
           onChange={(e) => onCategoryChange(e.target.value)}
-          className="w-full rounded-md border border-border-light bg-white px-3 py-2.5 text-sm text-text-primary outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+          className="field"
         >
           <option value="">All Categories</option>
           {categories.map((cat) => (
@@ -75,14 +75,14 @@ export function FilterSidebar({
       {/* Subcategory — only when a category is selected */}
       {selectedCategory && subcategories.length > 0 && (
         <div>
-          <label htmlFor="filter-subcategory" className="mb-2 block text-sm font-semibold text-text-primary">
+          <label htmlFor="filter-subcategory" className="field-label">
             Subcategory
           </label>
           <select
             id="filter-subcategory"
             value={selectedSubcategory}
             onChange={(e) => onSubcategoryChange(e.target.value)}
-            className="w-full rounded-md border border-border-light bg-white px-3 py-2.5 text-sm text-text-primary outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+            className="field"
           >
             <option value="">All Subcategories</option>
             {subcategories.map((sub) => (
@@ -96,7 +96,7 @@ export function FilterSidebar({
 
       {/* Vehicle */}
       <div>
-        <label htmlFor="filter-vehicle" className="mb-2 block text-sm font-semibold text-text-primary">
+        <label htmlFor="filter-vehicle" className="field-label">
           Vehicle
         </label>
         <input
@@ -105,20 +105,20 @@ export function FilterSidebar({
           value={vehicle}
           onChange={(e) => onVehicleChange(e.target.value)}
           placeholder="e.g. Hyundai Creta"
-          className="w-full rounded-md border border-border-light bg-white px-3 py-2.5 text-sm text-text-primary placeholder-text-muted outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+          className="field"
         />
       </div>
 
       {/* Availability */}
       <div>
-        <label htmlFor="filter-availability" className="mb-2 block text-sm font-semibold text-text-primary">
+        <label htmlFor="filter-availability" className="field-label">
           Availability
         </label>
         <select
           id="filter-availability"
           value={selectedAvailability}
           onChange={(e) => onAvailabilityChange(e.target.value as ProductAvailability | "")}
-          className="w-full rounded-md border border-border-light bg-white px-3 py-2.5 text-sm text-text-primary outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+          className="field"
         >
           <option value="">All</option>
           <option value="IN_STOCK">{availabilityLabel("IN_STOCK")}</option>

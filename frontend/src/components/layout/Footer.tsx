@@ -55,8 +55,12 @@ export function Footer() {
   );
 
   return (
-    <footer className="bg-dark-900 text-text-inverse">
-      <div className="container-page py-12">
+    <footer className="relative overflow-hidden bg-dark-900 text-text-inverse">
+      {/* Top accent line */}
+      <div className="h-0.5 w-full bg-gradient-to-r from-transparent via-orange-600/60 to-transparent" aria-hidden="true" />
+      {/* Subtle carbon texture */}
+      <div className="pointer-events-none absolute inset-0 carbon-texture opacity-60" aria-hidden="true" />
+      <div className="container-page relative py-12">
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
           {/* Brand */}
           <div className="sm:col-span-2 lg:col-span-1">
