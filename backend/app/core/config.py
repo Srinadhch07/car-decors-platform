@@ -76,7 +76,6 @@ class Settings(BaseSettings):
     # Login rate limiting.
     login_rate_limit_max: int = 5
     login_rate_limit_window_minutes: int = 15
-
     # Account management: password reset (Gmail SMTP, backend-only).
     # SMTP credentials must never be exposed to the frontend or committed.
     smtp_host: str = ""
@@ -85,7 +84,7 @@ class Settings(BaseSettings):
     smtp_password: str = ""
     smtp_from_email: str = ""
     # Base URL of the storefront; the backend builds reset links from it.
-    frontend_url: str = "http://localhost:5173"
+    frontend_url: str = "https://vrcardecors.in"
     # Lifetime of a single-use password-reset token (minutes).
     password_reset_token_minutes: int = 30
     # Forgot-password and reset-password rate limiting (per client IP).
@@ -115,6 +114,12 @@ class Settings(BaseSettings):
 
     # Product image upload limits (bytes). 5 MB is the documented maximum.
     product_image_max_bytes: int = 5 * 1024 * 1024
+
+    # Work Gallery media limits (bytes) and batch bound. Images are capped at
+    # 4 MB and MP4 videos at 25 MB; at most 10 files may be uploaded per batch.
+    gallery_image_max_bytes: int = 4 * 1024 * 1024
+    gallery_video_max_bytes: int = 25 * 1024 * 1024
+    gallery_batch_max_files: int = 10
 
     @field_validator("cookie_samesite")
     @classmethod

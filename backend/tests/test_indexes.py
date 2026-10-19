@@ -19,6 +19,7 @@ async def test_all_collections_have_declared_indexes(fake_db: AsyncDatabase) -> 
         "subcategories",
         "products",
         "testimonials",
+        "gallery",
     }
 
 
@@ -40,6 +41,12 @@ async def test_ensure_indexes_creates_expected_names(fake_db: AsyncDatabase) -> 
         "testimonials": [
             "ix_testimonials_public",
             "ix_testimonials_status_created",
+        ],
+        "gallery": [
+            "ix_gallery_public",
+            "ix_gallery_featured",
+            "ix_gallery_media_type",
+            "ix_gallery_category",
         ],
     }
     assert created == expected

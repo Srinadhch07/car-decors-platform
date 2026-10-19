@@ -10,15 +10,15 @@ export type RouterEntry =
   | { pathname: string; search?: string; hash?: string; state?: unknown };
 
 export const mockShopSettings: ShopSettings = {
-  shop_name: "SLG Car Decors",
-  whatsapp_number: "+919876543210",
-  phone: "+919876543210",
-  email: "contact@slg.com",
+  shop_name: "Venkata Ramana Real Value Car Decors",
+  whatsapp_number: "+91-1234567890",
+  phone: "+91-1234567890",
+  email: "info@vrcardecors.in",
   address: "123 Main Street, Chennai",
   business_hours: "Mon-Sat: 9AM-8PM",
   social_links: {
-    instagram: "https://instagram.com/slg",
-    facebook: "https://facebook.com/slg",
+    instagram: "https://instagram.com/vrcardecors",
+    facebook: "https://facebook.com/vrcardecors",
   },
   logo_url: null,
   theme: { ...DEFAULT_THEME },

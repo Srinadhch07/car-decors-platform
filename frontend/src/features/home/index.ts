@@ -1,3 +1,4 @@
+export { ShowroomHero } from "./ShowroomHero";
 export { HeroSection } from "./HeroSection";
 export { HeroSearch } from "./HeroSearch";
 export { ValuePropositions } from "./ValuePropositions";
@@ -6,5 +7,8 @@ export { CategoryCard } from "./CategoryCard";
 export { FeaturedProducts } from "./FeaturedProducts";
 export { FeaturedTestimonials } from "./FeaturedTestimonials";
 export { ProductCard } from "./ProductCard";
+export { HomeAboutSection } from "./HomeAboutSection";
+export { ShowcaseSection } from "./ShowcaseSection";
 export { WhyChooseSection } from "./WhyChooseSection";
+export { VisitUsSection } from "./VisitUsSection";
 export { ContactCTA } from "./ContactCTA";

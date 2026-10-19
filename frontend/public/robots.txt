@@ -3,4 +3,4 @@ Allow: /
 Disallow: /admin/
 Disallow: /api/
 
-Sitemap: https://car-decors.duckdns.org/sitemap.xml
+Sitemap: https://vrcardecors.in/sitemap.xml

@@ -7,28 +7,28 @@ describe("SeoHead", () => {
     render(
       <SeoHead
         data={{
-          title: "Premium Seat Covers | SLG Car Decors",
+          title: "Premium Seat Covers | Venkata Ramana Real Value Car Decors",
           description: "Luxury car seat covers in Hanamkonda, Telangana.",
           canonicalPath: "/products/premium-seat-covers",
-          siteName: "SLG Car Decors",
+          siteName: "Venkata Ramana Real Value Car Decors",
           ogImage: "/images/og-default.png",
         }}
       />,
     );
 
     const head = document.head;
-    expect(document.title).toBe("Premium Seat Covers | SLG Car Decors");
+    expect(document.title).toBe("Premium Seat Covers | Venkata Ramana Real Value Car Decors");
     expect(head.querySelector('meta[name="description"]')?.getAttribute("content")).toBe(
       "Luxury car seat covers in Hanamkonda, Telangana.",
     );
     expect(head.querySelector('link[rel="canonical"]')?.getAttribute("href")).toBe(
-      "https://car-decors.duckdns.org/products/premium-seat-covers",
+      "https://vrcardecors.in/products/premium-seat-covers",
     );
     expect(head.querySelector('meta[property="og:title"]')?.getAttribute("content")).toBe(
-      "Premium Seat Covers | SLG Car Decors",
+      "Premium Seat Covers | Venkata Ramana Real Value Car Decors",
     );
     expect(head.querySelector('meta[property="og:image"]')?.getAttribute("content")).toBe(
-      "https://car-decors.duckdns.org/images/og-default.png",
+      "https://vrcardecors.in/images/og-default.png",
     );
     expect(head.querySelector('meta[name="twitter:card"]')?.getAttribute("content")).toBe(
       "summary_large_image",
@@ -36,7 +36,7 @@ describe("SeoHead", () => {
   });
 
   it("applies noindex when requested", () => {
-    render(<SeoHead data={{ title: "Page Not Found | SLG", noIndex: true }} />);
+    render(<SeoHead data={{ title: "Page Not Found | Venkata Ramana", noIndex: true }} />);
     expect(document.head.querySelector('meta[name="robots"]')?.getAttribute("content")).toBe(
       "noindex, nofollow",
     );

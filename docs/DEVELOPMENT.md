@@ -47,10 +47,16 @@ npm run build          # tsc -b && vite build
 ```
 Use the venv interpreter; a system Python may lack test deps (mongomock).
 
-Last verified results: backend **327 passed**, ruff clean; frontend **394/395**
+Last verified results: backend **371 passed**, ruff clean; frontend **536/537**
 (1 known pre-existing `ProductForm.test.tsx` failure — jsdom/vitest `_buffer`
 interop, test-only), oxlint clean, `tsc -b` clean, build OK.
 Do not weaken tests to hide failures; report pre-existing ones as-is.
+
+### Branding & canonical domain
+- Business name: **Venkata Ramana Real Value Car Decors** (used in `SITE_URL`, `FALLBACK_BRAND`, index.html, AboutSection).
+- Canonical domain: **https://vrcardecors.in/** — configured in SEO/sitemap/robots/favicon. **Not live/verified.**
+- Favicon: animated SVG (`favicon.svg`), static fallback (`favicon-static.svg`), integrated in `index.html`.
+- When running locally, the dev origin is `http://localhost:5173`; SEO helpers use the production origin for absolute URLs.
 
 ## Tests layout
 - Backend: `backend/tests/` with `conftest.py` providing mongomock DB, httpx

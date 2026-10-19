@@ -5,10 +5,15 @@ overview lives in `README.md`; commands in `docs/DEVELOPMENT.md`; the agent rule
 in `AGENTS.md`.
 
 ## 1. What it is
-A storefront + admin console for a car-decor accessories shop. Public visitors
-browse a catalog and contact the shop via WhatsApp/phone (enquiry-driven — there is
-no checkout or payment). The single admin account manages catalog, inventory,
-shop settings, and customer testimonials.
+A storefront + admin console for **Venkata Ramana Real Value Car Decors** (brand name),
+a car-decor accessories shop. Public visitors browse a catalog and contact the shop
+via WhatsApp/phone (enquiry-driven — there is no checkout or payment). The single
+admin account manages catalog, inventory, shop settings, and customer testimonials.
+
+## 1b. Intended production origin
+`https://vrcardecors.in/` — configured as the canonical domain across SEO metadata,
+sitemap.xml, robots.txt, and Open Graph/Twitter tags. **Not yet live/verified.**
+Do not assume the domain resolves or has been registered.
 
 ## 2. Stack
 - **Backend:** Python >= 3.11, FastAPI, Pydantic v2, async PyMongo, Argon2id
@@ -43,13 +48,16 @@ React SPA (:5173)  ──/api + /media proxy──▶  FastAPI (:8000)
 | Indexes | `backend/app/db/indexes.py` |
 | Base document / `Money`/`PyObjectId` | `backend/app/models/base.py` |
 | Image validation | `backend/app/storage/images.py` |
+| Gallery media validation | `backend/app/storage/media.py` |
 | Seed CLI | `backend/scripts/seed.py` |
 | Frontend router | `frontend/src/app/router/index.tsx` |
 | API client (`ApiClient`) | `frontend/src/lib/api/client.ts` |
 | Shared API types | `frontend/src/types/api.ts` |
 | Test setup (MSW/jest-dom) | `frontend/src/test-setup.ts`, `frontend/src/test-utils.tsx` |
+| SEO helpers (`SITE_URL`, `FALLBACK_BRAND`, `applySeo`) | `frontend/src/lib/seo.ts` |
+| Animated favicon + static fallback | `frontend/public/favicon.svg`, `frontend/public/favicon-static.svg` |
 
-Route modules: `auth, catalog, products, shop, testimonials, health, seo`.
+Route modules: `auth, catalog, products, shop, testimonials, gallery, health, seo`.
 
 ## 5. Features
 - **Public catalog:** product list with search (`name`/`description`/`vehicle_tags`,
@@ -67,6 +75,16 @@ Route modules: `auth, catalog, products, shop, testimonials, health, seo`.
   public list + featured; admin approve/reject, publish, feature, edit, delete.
 - **Image uploads:** JPEG/PNG/WEBP only, validated by content-type + extension +
   magic bytes + size; ≤ 5 MB (413 otherwise).
+- **Work Gallery:** one image/video per item with title/description/optional
+  category and a curated display order. Limits: images 4 MiB, MP4 video 25 MiB,
+  batch ≤ 10 files. New items are drafts; public visibility requires
+  `is_published`, and featuring requires an already-published item. Admin CRUD +
+  batch upload, publish/unpublish, feature/unfeature, reorder, delete; public
+  list/filter (media type, category), featured list, and detail.
+  Frontend: admin Gallery page (`/admin/gallery`, upload/batch/edit/publish/
+  feature/order/delete), public "Our Work" page (`/gallery`, media filter +
+  keyboard lightbox), and a homepage featured-work section driven by
+  `GET /gallery/featured` (hidden when empty/unavailable).
 
 ## 6. API contract (`/api` prefix unless noted)
 Public (no auth):
@@ -74,6 +92,8 @@ Public (no auth):
 - `GET /shop`; `GET /categories`, `/categories/{slug}`, `/categories/{slug}/subcategories`
 - `GET /products` (query: `search, category, subcategory, vehicle, availability, sort, page, page_size`), `GET /products/{slug}`
 - `GET /testimonials`, `GET /testimonials/featured`; `POST /testimonials`
+- `GET /gallery` (query: `media_type, category, sort, page, page_size`),
+  `GET /gallery/featured`, `GET /gallery/{id}` (published only)
 - `GET /sitemap.xml` (root, no prefix)
 
 Admin — require `AdminDep` (JWT cookie); **all state-changing admin calls also require
@@ -90,6 +110,11 @@ Admin — require `AdminDep` (JWT cookie); **all state-changing admin calls also
 - Testimonials: `GET /admin/testimonials`, `PUT /admin/testimonials/{id}`,
   `PATCH /admin/testimonials/{id}/status|/publication|/feature`,
   `DELETE /admin/testimonials/{id}`
+- Work gallery: `GET /admin/gallery`, `GET /admin/gallery/{id}`,
+  `POST /admin/gallery` (multipart), `POST /admin/gallery/batch` (multipart,
+  ≤ 10 files), `PUT /admin/gallery/{id}` (multipart, optional media replace),
+  `PATCH /admin/gallery/{id}/publication|/feature|/order`,
+  `DELETE /admin/gallery/{id}`
 
 Errors: domain errors map to 4xx; `404` not found, `409` conflict/visibility,
 `413` upload too large, `422` validation, `503` readiness.
@@ -107,6 +132,12 @@ Errors: domain errors map to 4xx; `404` not found, `409` conflict/visibility,
 - `testimonials` — customer_name, text, rating (1–5), status
   (`pending|approved|rejected`), published, is_featured, consent, moderation_note.
   Public visibility requires `status=approved AND published AND consent`.
+- `gallery` — title, description, optional category, `media_type` (`image|video`),
+  `storage_key`, `url`, `mime_type`, `size_bytes`, `is_published`, `is_featured`,
+  `display_order`. Public visibility requires `is_published`; featuring requires a
+  published item. Indexed on `(is_published, display_order, created_at)`,
+  `(is_published, is_featured, display_order)`, `(media_type, is_published)`, and
+  `(category, is_published)`.
 - `shop_settings` — singleton: shop_name, whatsapp_number, phone, address,
   business_hours, social_links, logo_url, theme.
 
@@ -122,7 +153,9 @@ Backend (`backend/.env.example` — names only; set real values locally, never c
 - Mail/reset: `SMTP_HOST, SMTP_PORT, SMTP_USERNAME, SMTP_PASSWORD, SMTP_FROM_EMAIL,
   FRONTEND_URL, PASSWORD_RESET_TOKEN_MINUTES, FORGOT_PASSWORD_RATE_LIMIT_*,
   RESET_PASSWORD_RATE_LIMIT_*`
-- Limits: `TESTIMONIAL_SUBMIT_RATE_LIMIT_*, PRODUCT_IMAGE_MAX_BYTES`
+  - `FRONTEND_URL` is the canonical storefront origin used for password-reset links and sitemap host. **Intended production value: `https://vrcardecors.in`**.
+- Limits: `TESTIMONIAL_SUBMIT_RATE_LIMIT_*, PRODUCT_IMAGE_MAX_BYTES,
+  GALLERY_IMAGE_MAX_BYTES, GALLERY_VIDEO_MAX_BYTES, GALLERY_BATCH_MAX_FILES`
 - Storage: `STORAGE_MODE, STORAGE_LOCAL_DIR, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY,
   AWS_REGION, AWS_S3_BUCKET, AWS_S3_PUBLIC_URL`
 - Seed CLI: `SEED_ADMIN_EMAIL, SEED_ADMIN_PASSWORD, SEED_ADMIN_PASSWORD_HASH,
@@ -130,6 +163,11 @@ Backend (`backend/.env.example` — names only; set real values locally, never c
 
 Frontend: `VITE_API_BASE_URL` (empty = same origin; dev uses the Vite proxy).
 Production details: `PRODUCTION_CONFIGURATION.md`.
+
+### SEO / canonical domain configuration
+- Frontend: `SITE_URL` in `frontend/src/lib/seo.ts` is the canonical origin (`https://vrcardecors.in`).
+- Backend: `frontend_url` in `backend/app/core/config.py` defaults to the same origin for sitemap generation.
+- Both are single sources of truth; no duplicated domain strings in code.
 
 ## 9. Conventions & decisions
 - Routers thin; business rules + Mongo queries only via services/repositories.
@@ -141,9 +179,11 @@ Production details: `PRODUCTION_CONFIGURATION.md`.
   on non-GET, errors as `ApiRequestError`).
 
 ## 10. Verification status (last run, working tree)
-- Backend: `pytest` **327 passed**; `ruff check` clean.
-- Frontend: **394 passed / 1 failed** (395 total); `oxlint` clean; `tsc -b` clean;
+- Backend: `pytest` **371 passed**; `ruff check` clean.
+- Frontend: **536 passed / 1 failed** (537 total); `oxlint` clean; `tsc -b` clean;
   `vite build` succeeds.
+- Gallery frontend tests: `media.test.ts` (10), `OurWorkGallery.test.tsx` (6),
+  `GalleryAdminPage.test.tsx` (5), `ShowcaseSection.test.tsx` (4).
 - **Known failure (pre-existing, test-only):** `ProductForm.test.tsx` — image-upload
   case hits a jsdom 30 / vitest 5 `File`/`FormData` interop error (`_buffer`).
   Not a product bug; do not pin deps or weaken the test.

@@ -69,6 +69,24 @@ INDEX_DEFINITIONS: dict[str, tuple[IndexSpec, ...]] = {
             name="ix_testimonials_status_created",
         ),
     ),
+    "gallery": (
+        IndexSpec(
+            [("is_published", ASCENDING), ("display_order", ASCENDING), ("created_at", DESCENDING)],
+            name="ix_gallery_public",
+        ),
+        IndexSpec(
+            [("is_published", ASCENDING), ("is_featured", ASCENDING), ("display_order", ASCENDING)],
+            name="ix_gallery_featured",
+        ),
+        IndexSpec(
+            [("media_type", ASCENDING), ("is_published", ASCENDING)],
+            name="ix_gallery_media_type",
+        ),
+        IndexSpec(
+            [("category", ASCENDING), ("is_published", ASCENDING)],
+            name="ix_gallery_category",
+        ),
+    ),
 }
 
 

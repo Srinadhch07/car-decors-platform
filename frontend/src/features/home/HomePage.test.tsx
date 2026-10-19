@@ -4,7 +4,8 @@ import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import { TestWrapper, createMockState, mockShopSettings } from "../../test-utils";
-import type { Category, ProductListPage } from "../../types/api";
+import { HomePage } from "../../pages/HomePage";
+import type { Category, GalleryListPage, ProductListPage } from "../../types/api";
 import { ProductCard } from "./ProductCard";
 import { CategoryCard } from "./CategoryCard";
 import { HeroSearch } from "./HeroSearch";
@@ -76,12 +77,40 @@ const mockProducts: ProductListPage = {
   total_pages: 1,
 };
 
+const mockFeaturedGallery: GalleryListPage = {
+  items: [
+    {
+      id: "g1",
+      title: "Gloss ceramic finish",
+      description: "Hand-applied ceramic coating",
+      category: "Detailing",
+      media_type: "image",
+      url: "/media/gallery/one.jpg",
+      mime_type: "image/jpeg",
+      width: 1200,
+      height: 1500,
+      duration_seconds: null,
+      created_at: "2024-01-01",
+    },
+  ],
+  page: 1,
+  page_size: 6,
+  total: 1,
+  total_pages: 1,
+};
+
 const handlers = [
   http.get("*/api/categories", () =>
     HttpResponse.json(mockCategories),
   ),
   http.get("*/api/products", () =>
     HttpResponse.json(mockProducts),
+  ),
+  http.get("*/api/testimonials/featured", () =>
+    HttpResponse.json({ items: [], page: 1, page_size: 6, total: 0, total_pages: 0 }),
+  ),
+  http.get("*/api/gallery/featured", () =>
+    HttpResponse.json(mockFeaturedGallery),
   ),
 ];
 
@@ -399,5 +428,35 @@ describe("FeaturedProducts", () => {
       ),
     });
     expect(await screen.findByText(/failed to fetch/i)).toBeInTheDocument();
+  });
+});
+
+describe("HomePage", () => {
+  it("renders the homepage sections in the required order", async () => {
+    render(<HomePage />, { wrapper: TestWrapper });
+    await screen.findByText("Shop by Category");
+
+    const headings = screen
+      .getAllByRole("heading", { level: 2 })
+      .map((heading) => heading.textContent);
+
+    expect(headings).toEqual([
+      "Shop by Category",
+      "Featured Products",
+      "Personalise and protect your car",
+      "Our Work",
+      "Real Value for Your Ride",
+      "Come See Us in Person",
+    ]);
+  });
+
+  it("does not render a Brands We Carry section", () => {
+    render(<HomePage />, { wrapper: TestWrapper });
+    expect(screen.queryByText(/brands we carry/i)).not.toBeInTheDocument();
+  });
+
+  it("does not render product search on the homepage hero", () => {
+    render(<HomePage />, { wrapper: TestWrapper });
+    expect(screen.queryByRole("searchbox")).not.toBeInTheDocument();
   });
 });

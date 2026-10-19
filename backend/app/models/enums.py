@@ -21,3 +21,15 @@ class TestimonialStatus(StrEnum):
     PENDING = "pending"
     APPROVED = "approved"
     REJECTED = "rejected"
+
+
+class GalleryMediaType(StrEnum):
+    """Kind of media stored in a Work Gallery item.
+
+    Images and videos share one collection; the kind is persisted so listings
+    can filter and clients can pick the right renderer without inspecting mime
+    types.
+    """
+
+    IMAGE = "image"
+    VIDEO = "video"

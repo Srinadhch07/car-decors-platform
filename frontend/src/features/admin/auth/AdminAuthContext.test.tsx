@@ -8,7 +8,7 @@ import type { AdminUser } from "../../../types/api";
 import { AdminAuthProvider, useAdminAuth } from "./AdminAuthContext";
 import { useAdminSession } from "./useAdminSession";
 
-const adminUser: AdminUser = { id: "admin-1", email: "admin@slg.com" };
+const adminUser: AdminUser = { id: "admin-1", email: "admin@vrcardecors.in" };
 
 let loginBody: { email: string; password: string } | null = null;
 let logoutCalled = false;
@@ -44,7 +44,7 @@ function Probe() {
       <p data-testid="loading">{String(loading)}</p>
       <button
         type="button"
-        onClick={() => void login("admin@slg.com", "secret").catch(() => {})}
+        onClick={() => void login("admin@vrcardecors.in", "secret").catch(() => {})}
       >
         Login
       </button>
@@ -94,7 +94,7 @@ describe("AdminAuthContext", () => {
     await waitFor(() => {
       expect(screen.getByTestId("email")).toHaveTextContent(adminUser.email);
     });
-    expect(loginBody).toEqual({ email: "admin@slg.com", password: "secret" });
+    expect(loginBody).toEqual({ email: "admin@vrcardecors.in", password: "secret" });
     expect(screen.getByTestId("is-authenticated")).toHaveTextContent("true");
   });
 

@@ -10,7 +10,7 @@ import { AdminAuthProvider } from "../../../features/admin/auth";
 import LoginPage from "./LoginPage";
 import ForgotPasswordPage from "./ForgotPasswordPage";
 
-const adminUser: AdminUser = { id: "admin-1", email: "admin@slg.com" };
+const adminUser: AdminUser = { id: "admin-1", email: "admin@vrcardecors.in" };
 
 let loginBody: { email: string; password: string } | null = null;
 
@@ -67,12 +67,12 @@ describe("LoginPage", () => {
     renderLogin();
     await screen.findByRole("heading", { level: 1, name: /admin sign in/i });
 
-    await user.type(screen.getByLabelText("Email"), "admin@slg.com");
+    await user.type(screen.getByLabelText("Email"), "admin@vrcardecors.in");
     await user.type(screen.getByLabelText("Password"), "secret");
     await user.click(screen.getByRole("button", { name: "Sign In" }));
 
     expect(await screen.findByText("Admin Home")).toBeInTheDocument();
-    expect(loginBody).toEqual({ email: "admin@slg.com", password: "secret" });
+    expect(loginBody).toEqual({ email: "admin@vrcardecors.in", password: "secret" });
   });
 
   it("shows invalid credentials message on 401", async () => {
@@ -85,7 +85,7 @@ describe("LoginPage", () => {
     renderLogin();
     await screen.findByRole("heading", { level: 1, name: /admin sign in/i });
 
-    await user.type(screen.getByLabelText("Email"), "admin@slg.com");
+    await user.type(screen.getByLabelText("Email"), "admin@vrcardecors.in");
     await user.type(screen.getByLabelText("Password"), "wrong");
     await user.click(screen.getByRole("button", { name: "Sign In" }));
 
@@ -103,7 +103,7 @@ describe("LoginPage", () => {
     renderLogin();
     await screen.findByRole("heading", { level: 1, name: /admin sign in/i });
 
-    await user.type(screen.getByLabelText("Email"), "admin@slg.com");
+    await user.type(screen.getByLabelText("Email"), "admin@vrcardecors.in");
     await user.type(screen.getByLabelText("Password"), "secret");
     await user.click(screen.getByRole("button", { name: "Sign In" }));
 
@@ -121,7 +121,7 @@ describe("LoginPage", () => {
     renderLogin();
     await screen.findByRole("heading", { level: 1, name: /admin sign in/i });
 
-    await user.type(screen.getByLabelText("Email"), "admin@slg.com");
+    await user.type(screen.getByLabelText("Email"), "admin@vrcardecors.in");
     await user.type(screen.getByLabelText("Password"), "wrong");
     await user.click(screen.getByRole("button", { name: "Sign In" }));
 

@@ -7,12 +7,11 @@ import { buildWhatsAppUrl } from "../../lib/utils/whatsapp";
 const navLinks = [
   { to: "/", label: "Home" },
   { to: "/products", label: "Products" },
+  { to: "/gallery", label: "Our Work" },
   { to: "/testimonials", label: "Testimonials" },
   { to: "/about", label: "About" },
   { to: "/contact", label: "Contact" },
 ];
-
-const BRAND_TAGLINE = "Real Value Car Decors";
 
 const WHATSAPP_ICON_PATH =
   "M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z";
@@ -98,47 +97,29 @@ export function Header() {
               className="pointer-events-none absolute bottom-1 right-4 hidden h-9 w-auto text-white/10 sm:block"
             />
 
-            <div className="relative flex h-16 w-full items-stretch gap-1 sm:h-18 sm:gap-2 lg:h-20">
-              {/* Brand — curved surface panel flowing into the dark shell */}
-              <div className="relative flex min-w-0 flex-1 items-stretch self-stretch sm:flex-none sm:w-64 md:w-60 lg:w-64 xl:w-80 2xl:w-96">
-                <div
-                  aria-hidden="true"
-                  className="pointer-events-none absolute inset-y-0 left-0 right-0 rounded-2xl bg-surface shadow-card sm:right-[-1.25rem] sm:rounded-r-[3rem]"
-                />
-                {/* Integrated orange sweep at the light/dark seam (desktop only) */}
-                <div
-                  aria-hidden="true"
-                  className="pointer-events-none absolute inset-y-0 -right-6 hidden w-16 rounded-full bg-orange-500/30 blur-xl sm:block"
-                />
-                <Link
-                  to="/"
-                  aria-label={`${brandName} — Home`}
-                  className="relative z-10 flex h-full w-full items-center gap-2 rounded-2xl pl-2.5 pr-2.5 transition-colors hover:bg-orange-50/40 sm:gap-3 sm:rounded-r-[3rem] sm:pl-5 sm:pr-9 lg:pl-6 lg:pr-10"
-                >
-                  {shop?.logo_url ? (
-                    <img
-                      src={shop.logo_url}
-                      alt=""
-                      className="h-7 w-auto shrink-0 sm:h-8"
-                      onError={(e) => {
-                        e.currentTarget.style.display = "none";
-                      }}
-                    />
-                  ) : (
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-orange-50 sm:h-10 sm:w-10">
-                      <Car className="h-5 w-5 text-orange-600 sm:h-6 sm:w-6" />
-                    </span>
-                  )}
-                  <span className="flex min-w-0 flex-col justify-center leading-tight">
-                    <span className="line-clamp-2 text-base font-bold tracking-tight text-text-primary sm:text-lg">
-                      {brandName}
-                    </span>
-                    <span className="hidden truncate text-[11px] font-medium tracking-wide text-orange-600 lg:block lg:text-xs">
-                      {BRAND_TAGLINE}
-                    </span>
+            <div className="relative flex h-16 w-full items-stretch gap-2 sm:h-18 lg:h-20">
+              {/* Logo — the business name intentionally lives in the homepage
+                  hero, so the header shows only a compact mark. */}
+              <Link
+                to="/"
+                aria-label={`${brandName} — Home`}
+                className="relative z-10 flex h-full shrink-0 items-center rounded-xl px-1.5 transition-colors hover:bg-white/5 sm:px-2"
+              >
+                {shop?.logo_url ? (
+                  <img
+                    src={shop.logo_url}
+                    alt=""
+                    className="h-8 w-auto shrink-0 rounded-md object-contain sm:h-9"
+                    onError={(e) => {
+                      e.currentTarget.style.display = "none";
+                    }}
+                  />
+                ) : (
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-orange-50">
+                    <Car className="h-5 w-5 text-orange-600 sm:h-6 sm:w-6" />
                   </span>
-                </Link>
-              </div>
+                )}
+              </Link>
 
               {/* Desktop / tablet navigation pill */}
               <nav
@@ -166,7 +147,7 @@ export function Header() {
               </nav>
 
               {/* Desktop / tablet actions */}
-              <div className="flex shrink-0 items-center gap-2 self-center sm:gap-2 sm:pl-3 sm:pr-3 lg:gap-3 lg:pl-6 lg:pr-5">
+              <div className="ml-auto flex shrink-0 items-center gap-2 self-center sm:gap-2 sm:pl-3 sm:pr-3 lg:gap-3 lg:pl-6 lg:pr-5">
                 <form
                   role="search"
                   aria-label="Search products"
@@ -217,7 +198,7 @@ export function Header() {
                 ref={menuButtonRef}
                 type="button"
                 onClick={() => setMobileOpen((o) => !o)}
-                className="flex h-10 w-10 shrink-0 items-center justify-center self-center rounded-full border border-dark-600 bg-dark-800 text-white transition-colors hover:border-orange-500 hover:text-orange-400 active:scale-90 md:hidden lg:h-9 lg:w-9"
+                className="mr-1.5 flex h-10 w-10 shrink-0 items-center justify-center self-center rounded-full border border-dark-600 bg-dark-800 text-white transition-colors hover:border-orange-500 hover:text-orange-400 active:scale-90 md:hidden lg:h-9 lg:w-9"
                 aria-label={mobileOpen ? "Close menu" : "Open menu"}
                 aria-expanded={mobileOpen}
                 aria-controls="mobile-nav"

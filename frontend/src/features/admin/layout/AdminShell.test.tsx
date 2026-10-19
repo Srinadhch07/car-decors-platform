@@ -9,7 +9,7 @@ import type { AdminUser } from "../../../types/api";
 import { AdminAuthProvider } from "../../../features/admin/auth";
 import AdminShell from "./AdminShell";
 
-const adminUser: AdminUser = { id: "admin-1", email: "admin@slg.com" };
+const adminUser: AdminUser = { id: "admin-1", email: "admin@vrcardecors.in" };
 
 let logoutCalled = false;
 
@@ -55,6 +55,7 @@ describe("AdminShell", () => {
     expect(within(nav).getByRole("link", { name: /^products$/i })).toBeInTheDocument();
     expect(within(nav).getByRole("link", { name: /^categories$/i })).toBeInTheDocument();
     expect(within(nav).getByRole("link", { name: /^subcategories$/i })).toBeInTheDocument();
+    expect(within(nav).getByRole("link", { name: /^gallery$/i })).toBeInTheDocument();
     expect(within(nav).getByRole("link", { name: /^testimonials$/i })).toBeInTheDocument();
     expect(within(nav).getByRole("link", { name: /^shop settings$/i })).toBeInTheDocument();
     expect(within(nav).getByRole("link", { name: /^account$/i })).toBeInTheDocument();
@@ -138,6 +139,10 @@ describe("AdminShell", () => {
     expect(within(drawerNav).getByRole("link", { name: /^subcategories$/i })).toHaveAttribute(
       "href",
       "/admin/subcategories",
+    );
+    expect(within(drawerNav).getByRole("link", { name: /^gallery$/i })).toHaveAttribute(
+      "href",
+      "/admin/gallery",
     );
     expect(within(drawerNav).getByRole("link", { name: /^testimonials$/i })).toHaveAttribute(
       "href",

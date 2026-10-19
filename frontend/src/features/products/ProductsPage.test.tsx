@@ -387,6 +387,37 @@ describe("ProductsPage", () => {
       "/products/rubber-floor-mat",
     );
   });
+
+  it("renders a breadcrumb with a Home link", async () => {
+    renderPage();
+    await screen.findByText("Leather Seat Cover");
+    const nav = screen.getByRole("navigation", { name: /breadcrumb/i });
+    expect(within(nav).getByRole("link", { name: /home/i })).toHaveAttribute("href", "/");
+    expect(within(nav).getByText("All Products")).toBeInTheDocument();
+  });
+
+  it("renders a share button on every product card", async () => {
+    renderPage();
+    await screen.findByText("Leather Seat Cover");
+    expect(
+      screen.getByRole("button", { name: /share leather seat cover/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /share rubber floor mat/i }),
+    ).toBeInTheDocument();
+  });
+
+  it("filters in place from the category strip", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await screen.findByText("Leather Seat Cover");
+
+    await user.click(screen.getByRole("button", { name: "Seat Covers" }));
+
+    await waitFor(() => {
+      expect(lastRequestUrl).toContain("category=seat-covers");
+    });
+  });
 });
 
 describe("Pagination", () => {

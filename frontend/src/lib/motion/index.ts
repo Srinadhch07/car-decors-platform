@@ -6,3 +6,4 @@ export type { RevealVars } from "./useScrollReveal";
 export { useParallax } from "./useParallax";
 export type { ParallaxVars } from "./useParallax";
 export { useHeroAnimation } from "./useHeroAnimation";
+export { useTilt } from "./useTilt";

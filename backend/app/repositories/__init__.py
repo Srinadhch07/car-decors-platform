@@ -3,6 +3,7 @@
 from app.repositories.admin_users import AdminUserRepository
 from app.repositories.base import BaseRepository
 from app.repositories.categories import CategoryRepository
+from app.repositories.gallery import GalleryRepository
 from app.repositories.products import ProductRepository
 from app.repositories.shop_settings import SHOP_SETTINGS_ID, ShopSettingsRepository
 from app.repositories.subcategories import SubcategoryRepository
@@ -13,6 +14,7 @@ __all__ = [
     "AdminUserRepository",
     "BaseRepository",
     "CategoryRepository",
+    "GalleryRepository",
     "ProductRepository",
     "ShopSettingsRepository",
     "SubcategoryRepository",

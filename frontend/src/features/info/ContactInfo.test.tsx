@@ -30,8 +30,8 @@ describe("ContactInfo", () => {
     render(<ContactInfo />, {
       wrapper: ({ children }) => <TestWrapper>{children}</TestWrapper>,
     });
-    const email = screen.getByRole("link", { name: "contact@slg.com" });
-    expect(email).toHaveAttribute("href", "mailto:contact@slg.com");
+    const email = screen.getByRole("link", { name: "info@vrcardecors.in" });
+    expect(email).toHaveAttribute("href", "mailto:info@vrcardecors.in");
   });
 
   it("renders business hours", () => {

@@ -1,6 +1,7 @@
 export { AboutPage } from "./AboutPage";
 export { CategoryPage } from "./CategoryPage";
 export { ContactPage } from "./ContactPage";
+export { GalleryPage } from "./GalleryPage";
 export { HomePage } from "./HomePage";
 export { NotFoundPage } from "./NotFoundPage";
 export { ProductDetailPage } from "./ProductDetailPage";

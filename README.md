@@ -1,6 +1,6 @@
 # Car Decor Platform
 
-A production-grade web platform for a car decor and accessories business. It pairs a
+A production-grade web platform for **Venkata Ramana Real Value Car Decors**, a car decor and accessories business. It pairs a
 **public storefront** where customers browse and enquire about products with a
 **private admin console** where the shop owner manages the catalog, product images,
 and business details — all backed by a FastAPI + MongoDB API. **v1.0.0** is the
@@ -26,9 +26,7 @@ and information online, conversation and close offline.
 - **Storefront:** Public catalog with categories, subcategories, search, vehicle
   filters, availability labels, and product detail pages with photos and prices (or
   "Contact for price").
-- **Enquiry-driven conversion:** Every product page and the contact page offer a
-  "Chat on WhatsApp" call-to-action that pre-fills a message referencing the
-  product and vehicle, plus a phone-call fallback.
+- **Work Gallery:** Admin-managed gallery of work examples (images + MP4 video), with upload/batch upload, publish/unpublish, feature/unfeature, reorder, and delete. Public "Our Work" page with media filter and keyboard-accessible lightbox. Homepage showcases featured gallery items.
 - **Admin console:** A password-protected control center where the owner manages
   shop details (name, phone, WhatsApp number, address, hours, social links),
   categories/subcategories, and products with image uploads — with no developer
@@ -36,7 +34,7 @@ and information online, conversation and close offline.
 
 ### Target Business
 
-- A boutique or dealership-scale **car accessories / car decor shop**.
+- **Venkata Ramana Real Value Car Decors** — a boutique or dealership-scale **car accessories / car decor shop**.
 - Operator comfort with web tools, without a technical staff.
 - Prefers a lightweight, focused solution over a generic e-commerce suite.
 
@@ -105,6 +103,8 @@ These are judged **not part of v1.0.0** and are deliberately excluded:
   accessories market.
 - **Owner-managed content:** shop contact details, social links, categories,
   products, and photography all editable from the admin console; no code changes.
+
+- **Work Gallery showcase:** Admin gallery management (upload, batch, publish, feature, reorder, delete); public "Our Work" page with filter and lightbox; homepage featured section driven by gallery API.
 
 ### V1 Business Philosophy
 
@@ -251,6 +251,9 @@ npm run dev
 
 - Storefront: `http://localhost:5173` (Vite proxies `/api` and `/media` to :8000)
 - Admin: `http://localhost:5173/admin`
+- **Intended canonical domain:** `https://vrcardecors.in/` (configured in SEO/sitemap; **not yet live/verified**)
+
+---
 
 ---
 
@@ -265,12 +268,13 @@ All backend settings are read from the environment or a local `.env` file. See
 | `JWT_SECRET` | Signing key for sessions; required in production |
 | `COOKIE_*`, `CSRF_COOKIE_NAME` | Session/CSRF cookie tuning (secure flag, samesite) |
 | `LOGIN_RATE_LIMIT_MAX`, `LOGIN_RATE_LIMIT_WINDOW_MINUTES` | Per-IP login throttle |
-| `SMTP_*`, `FRONTEND_URL` | Gmail SMTP + storefront origin used for the password-reset email |
+| `SMTP_*`, `FRONTEND_URL` | Gmail SMTP + storefront origin used for the password-reset email; **intended production value: `https://vrcardecors.in`** |
 | `PASSWORD_RESET_TOKEN_MINUTES`, `FORGOT_PASSWORD_RATE_LIMIT_MAX`, `RESET_PASSWORD_RATE_LIMIT_MAX` | Reset-token lifetime and per-IP activate/reset throttle |
 | `STORAGE_MODE` | `local` (default, files served at `/media`) or `s3` (Amazon S3) |
 | `AWS_*` | AWS credentials — only needed for `STORAGE_MODE=s3`; never commit |
 | `PRODUCT_IMAGE_MAX_BYTES` | Max upload size (default 5 MB) |
-| `CORS_ORIGINS` | Comma-separated allowed browser origins |
+| `GALLERY_IMAGE_MAX_BYTES`, `GALLERY_VIDEO_MAX_BYTES`, `GALLERY_BATCH_MAX_FILES` | Work Gallery media limits (defaults 4 MB images, 25 MB video, 10 files/batch) |
+| `CORS_ORIGINS` | Comma-separated allowed browser origins (must include `https://vrcardecors.in` in production) |
 
 The frontend uses a single variable: `VITE_API_BASE_URL` (empty means same-origin,
 which is correct in dev through the Vite proxy).
@@ -286,27 +290,28 @@ templates are tracked. Do not expose AWS keys or real admin passwords.
 
 ```powershell
 cd backend
-pytest                # 195 tests — API routes, services, repositories, storage, seed
+pytest                # 371 tests — API routes, services, repositories, storage, seed, gallery
 ruff check .          # lint
 ruff format --check . # formatting
-python mongo_smoke.py # optional: real MongoDB + local storage end-to-end run (68 checks)
+python mongo_smoke.py # optional: real MongoDB + local storage integration smoke run (68 checks)
 ```
 
-Verified results for v1.0.0: `pytest` → **195 passed** (6 non-blocking warnings);
-`ruff check` → **passed**; `ruff format --check` → **66 files already formatted**;
+Verified results: `pytest` → **371 passed** (21 non-blocking warnings);
+`ruff check` → **passed**; `ruff format --check` → **clean**;
 `mongo_smoke.py` → **68/68 checks passed** against a live MongoDB instance.
 
 ### Frontend
 
 ```bash
 cd frontend
-npm run test          # vitest (289 passing + 1 known test-only issue; see Known Issues)
+npm run test          # vitest (536 passing / 1 known pre-existing failure; see Known Issues)
 npx tsc -b            # type check
 npm run build         # production build → dist/
+npm run lint          # oxlint
 ```
 
-Verified results for v1.0.0: `vitest` → **289 passed / 1 failed** (25 suites);
-`tsc -b` → **clean (`exit 0`)**; `npm run build` → **success**.
+Verified results: `vitest` → **536 passed / 1 failed** (69 suites);
+`tsc -b` → **clean (`exit 0`)**; `npm run lint` → **clean**; `npm run build` → **success**.
 
 ---
 
@@ -335,6 +340,9 @@ platform.
   unreachable — by design, so orchestrators can restart the app.
 - **Deprecation warnings:** pytest emits Starlette deprecation warnings about
   `HTTP_413_REQUEST_ENTITY_TOO_LARGE` (6 instances). Cosmetic; planned for cleanup.
+- **Canonical domain:** `https://vrcardecors.in/` is configured throughout SEO,
+  sitemap, and robots.txt as the intended production origin. **The domain has not
+  been registered, verified live, or deployed.** Do not assume it resolves.
 
 ---
 

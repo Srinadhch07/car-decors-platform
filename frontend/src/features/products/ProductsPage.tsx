@@ -1,16 +1,24 @@
 import { type FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useSearchParams } from "react-router-dom";
-import { Filter, Search, X } from "lucide-react";
+import { Link, useSearchParams } from "react-router-dom";
+import { ChevronRight, Filter, Search, X } from "lucide-react";
 import type { Category, ProductAvailability, ProductListPage, Subcategory } from "../../types/api";
 import { api } from "../../lib/api/client";
-import { Container, SectionHeading, EmptyState, ErrorState } from "../../components/ui";
+import { Container, EmptyState, ErrorState } from "../../components/ui";
 import { useShopSettings } from "../../context/ShopSettingsContext";
-import { DEFAULT_OG_IMAGE, FALLBACK_BRAND, type SeoData } from "../../lib/seo";
+import {
+  DEFAULT_OG_IMAGE,
+  FALLBACK_BRAND,
+  buildBreadcrumbs,
+  SITE_URL,
+  type SeoData,
+} from "../../lib/seo";
 import { SeoHead } from "../../components/seo";
-import { ProductCard } from "../home/ProductCard";
+import { canAnimate } from "../../lib/motion/environment";
+import { ProductGridCard } from "./ProductGridCard";
 import { ProductSkeleton } from "./ProductSkeleton";
 import { Pagination } from "./Pagination";
 import { ActiveFilters } from "./ActiveFilters";
+import { CategoryStrip } from "./CategoryStrip";
 import { FilterSidebar } from "./FilterSidebar";
 import { FilterDrawer } from "./FilterDrawer";
 
@@ -50,6 +58,10 @@ export function ProductsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // The grid entrance animation plays once on the first catalogue load and is
+  // never replayed while filtering or paging (kept responsive).
+  const gridRevealedRef = useRef(false);
+
   // SEO: unique title/description, canonical points at the clean /products URL
   const seo: SeoData = useMemo(
     () => ({
@@ -58,6 +70,10 @@ export function ProductsPage() {
       canonicalPath: "/products",
       siteName: shop?.shop_name ?? FALLBACK_BRAND,
       ogImage: DEFAULT_OG_IMAGE,
+      jsonLd: buildBreadcrumbs(SITE_URL, [
+        { name: "Home", path: "/" },
+        { name: "Products", path: "/products" },
+      ]),
     }),
     [shop],
   );
@@ -121,6 +137,14 @@ export function ProductsPage() {
     });
     return () => { cancelled = true; };
   }, [search, category, subcategory, vehicle, availability, sort, page]);
+
+  // Mark the grid as revealed after the first successful load so subsequent
+  // filtering/pagination renders skip the entrance animation.
+  useEffect(() => {
+    if (!loading && products && products.items.length > 0) {
+      gridRevealedRef.current = true;
+    }
+  }, [loading, products]);
 
   // --- URL update helpers ---
 
@@ -296,24 +320,33 @@ export function ProductsPage() {
     />
   );
 
+  const animateGrid = canAnimate() && !gridRevealedRef.current;
+
   return (
     <div>
       <SeoHead data={seo} />
-      {/* Header */}
-      <section className="page-banner border-b border-dark-700">
+
+      {/* Compact automotive banner */}
+      <section className="page-banner relative border-b border-dark-700">
         <div className="absolute inset-0 carbon-texture" aria-hidden="true" />
-        <Container className="relative py-10 sm:py-14">
-          <SectionHeading
-            title="All Products"
-            subtitle="Browse our range of car accessories and decor"
-            centered
-            eyebrow="Showroom"
-            tone="dark"
-            className="mb-6"
-          />
+        <div
+          aria-hidden="true"
+          className="banner-grid pointer-events-none absolute inset-x-0 top-0 h-40"
+        />
+        <Container className="relative py-10 sm:py-12">
+          <p className="eyebrow animate-card-enter">The Car Accessories Collection</p>
+          <h1 className="animate-card-enter mt-3 max-w-2xl text-3xl font-bold tracking-tight text-white [animation-delay:80ms] sm:text-4xl">
+            Find the Perfect Upgrade for Your Drive
+          </h1>
+          <p className="animate-card-enter mt-3 max-w-xl text-sm text-gray-300 [animation-delay:160ms] sm:text-base">
+            Explore accessories designed to make every drive more personal.
+          </p>
 
           {/* Search */}
-          <form onSubmit={handleSearchSubmit} className="mx-auto flex max-w-xl items-center">
+          <form
+            onSubmit={handleSearchSubmit}
+            className="animate-card-enter mx-auto mt-6 flex max-w-xl items-center [animation-delay:240ms] sm:mx-0"
+          >
             <div className="relative flex-1">
               <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
               <input
@@ -344,9 +377,28 @@ export function ProductsPage() {
             </button>
           </form>
         </Container>
+        <div aria-hidden="true" className="banner-edge absolute inset-x-0 bottom-0 h-px" />
       </section>
 
       <Container className="py-6 sm:py-8">
+        {/* Breadcrumb */}
+        <nav aria-label="Breadcrumb" className="mb-2 flex items-center gap-1.5 text-sm text-text-muted">
+          <Link to="/" className="transition-colors hover:text-orange-600">
+            Home
+          </Link>
+          <ChevronRight className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+          <span className="font-medium text-text-primary" aria-current="page">
+            All Products
+          </span>
+        </nav>
+
+        {/* Shop by category */}
+        <CategoryStrip
+          categories={categories}
+          selectedCategory={category}
+          onSelect={handleCategoryChange}
+        />
+
         {/* Mobile: filter/sort bar */}
         <div className="mb-4 flex items-center gap-3 md:hidden">
           <button
@@ -413,15 +465,15 @@ export function ProductsPage() {
               <label htmlFor="drawer-category" className="field-label">
                 Category
               </label>
-              <select
-                id="drawer-category"
-                value={drawerCategory}
-                onChange={(e) => {
-                  setDrawerCategory(e.target.value);
-                  setDrawerSubcategory("");
-                }}
-                className="field"
-              >
+                <select
+                  id="drawer-category"
+                  value={drawerCategory}
+                  onChange={(e) => {
+                    setDrawerCategory(e.target.value);
+                    setDrawerSubcategory("");
+                  }}
+                  className="field"
+                >
                 <option value="">All Categories</option>
                 {categories.map((cat) => (
                   <option key={cat.id} value={cat.slug}>
@@ -486,7 +538,6 @@ export function ProductsPage() {
               </select>
             </div>
 
-            {/* Apply button */}
             <button
               type="button"
               onClick={applyDrawer}
@@ -497,25 +548,42 @@ export function ProductsPage() {
           </div>
         </FilterDrawer>
 
-        <div className="flex gap-8">
-          {/* Desktop sidebar */}
-          <aside className="hidden w-60 shrink-0 md:block">
-            <div className="sticky top-24">
-              <div className="card-surface p-5">{filterContent}</div>
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-[15rem_1fr]">
+          {/* Desktop filter sidebar */}
+          <aside className="hidden md:block">
+            <div className="sticky top-24 card-surface p-5">
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="text-sm font-semibold uppercase tracking-wide text-text-primary">
+                  Filters
+                </h2>
+                {hasFilters && (
+                  <button
+                    type="button"
+                    onClick={handleClearAll}
+                    className="text-xs font-medium text-orange-600 transition-colors hover:text-orange-700"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+              {filterContent}
             </div>
           </aside>
 
-          {/* Main content */}
-          <div className="min-w-0 flex-1">
-            {/* Result count + desktop sort */}
-            <div className="mb-5 flex items-center justify-between gap-3">
-              {loading ? (
-                <div className="h-5 w-32 animate-pulse rounded bg-surface-muted" />
-              ) : products ? (
-                <p className="text-sm text-text-secondary">
-                  {products.total} product{products.total !== 1 ? "s" : ""} found
-                </p>
-              ) : null}
+          <div>
+            {/* Results toolbar */}
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+              <div>
+                {loading ? (
+                  <div className="h-5 w-32 animate-pulse rounded bg-surface-muted" />
+                ) : products ? (
+                  <p className="text-sm text-text-secondary">
+                    <span className="font-semibold text-text-primary">{products.total}</span>{" "}
+                    product{products.total !== 1 ? "s" : ""}
+                    {hasFilters ? " match your filters" : " available"}
+                  </p>
+                ) : null}
+              </div>
 
               {/* Desktop sort */}
               <div className="hidden md:block">
@@ -539,7 +607,7 @@ export function ProductsPage() {
 
             {/* Loading skeleton */}
             {loading && (
-              <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
+              <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 xl:grid-cols-4">
                 {Array.from({ length: 8 }).map((_, i) => (
                   <ProductSkeleton key={i} />
                 ))}
@@ -553,9 +621,19 @@ export function ProductsPage() {
 
             {/* Products */}
             {!loading && !error && products && products.items.length > 0 && (
-              <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
-                {products.items.map((product) => (
-                  <ProductCard key={product.id} product={product} />
+              <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 xl:grid-cols-4">
+                {products.items.map((product, index) => (
+                  <div
+                    key={product.id}
+                    className={`h-full ${animateGrid ? "animate-card-enter" : ""}`}
+                    style={
+                      animateGrid
+                        ? { animationDelay: `${Math.min(index, 7) * 45}ms` }
+                        : undefined
+                    }
+                  >
+                    <ProductGridCard product={product} />
+                  </div>
                 ))}
               </div>
             )}
@@ -566,7 +644,7 @@ export function ProductsPage() {
                 title="No products found"
                 description={
                   hasFilters
-                    ? "Try adjusting your search or filter criteria."
+                    ? "No products match your current filters. Try adjusting your search or filter criteria."
                     : "No products are available yet."
                 }
                 action={

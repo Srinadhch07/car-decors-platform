@@ -16,18 +16,27 @@ describe("Header", () => {
     const nav = screen.getByRole("navigation", { name: /main navigation/i });
     expect(within(nav).getByRole("link", { name: /home/i })).toBeInTheDocument();
     expect(within(nav).getByRole("link", { name: /products/i })).toBeInTheDocument();
+    expect(within(nav).getByRole("link", { name: /our work/i })).toHaveAttribute(
+      "href",
+      "/gallery",
+    );
     expect(within(nav).getByRole("link", { name: /about/i })).toBeInTheDocument();
     expect(within(nav).getByRole("link", { name: /contact/i })).toBeInTheDocument();
   });
 
-  it("renders shop name from settings", () => {
+  it("exposes the shop name via the logo link without rendering it as header text", () => {
     render(<Header />, { wrapper: TestWrapper });
-    expect(screen.getAllByText(mockShopSettings.shop_name).length).toBeGreaterThan(0);
+    const home = screen.getByRole("link", {
+      name: new RegExp(mockShopSettings.shop_name),
+    });
+    expect(home).toHaveAttribute("href", "/");
+    // The visible business name now lives in the homepage hero, not the header.
+    expect(screen.queryByText(mockShopSettings.shop_name)).not.toBeInTheDocument();
   });
 
-  it("renders the brand tagline", () => {
+  it("no longer renders the brand tagline in the header", () => {
     render(<Header />, { wrapper: TestWrapper });
-    expect(screen.getAllByText("Real Value Car Decors").length).toBeGreaterThan(0);
+    expect(screen.queryByText("Real Value Car Decors")).not.toBeInTheDocument();
   });
 
   it("renders a working search control", async () => {
@@ -66,7 +75,7 @@ describe("Header", () => {
         </TestWrapper>
       ),
     });
-    expect(screen.getAllByText("Car Decor").length).toBeGreaterThan(0);
+    expect(screen.getByRole("link", { name: /Car Decor/ })).toBeInTheDocument();
   });
 
   it("highlights active route", () => {

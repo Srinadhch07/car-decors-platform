@@ -215,6 +215,16 @@
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--theme-primary) 18%, transparent);
   }
 
+  /* Invalid field state — semantic red, intentionally independent of theme */
+  .field-error,
+  .field-error:focus {
+    border-color: #dc2626;
+  }
+
+  .field-error:focus {
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.18);
+  }
+
   .field-label {
     display: block;
     margin-bottom: 0.5rem;
@@ -281,6 +291,39 @@
     mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
     opacity: 0.35;
   }
+
+  /* Perspective "road grid" backdrop for the products banner. Uses the
+     inverse foreground token so it stays legible on the dark band under any
+     saved theme; purely decorative. */
+  .banner-grid {
+    background-image:
+      linear-gradient(
+        to right,
+        color-mix(in srgb, var(--theme-foreground-inverse) 7%, transparent) 1px,
+        transparent 1px
+      ),
+      linear-gradient(
+        to bottom,
+        color-mix(in srgb, var(--theme-foreground-inverse) 7%, transparent) 1px,
+        transparent 1px
+      );
+    background-size: 46px 46px;
+    transform: perspective(460px) rotateX(58deg) scale(1.35);
+    transform-origin: 50% 0%;
+    -webkit-mask-image: radial-gradient(120% 90% at 50% 0%, #000 35%, transparent 80%);
+    mask-image: radial-gradient(120% 90% at 50% 0%, #000 35%, transparent 80%);
+    opacity: 0.6;
+  }
+
+  /* Thin theme-tinted hairline that separates the banner from the page */
+  .banner-edge {
+    background-image: linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in srgb, var(--theme-primary) 70%, transparent),
+      transparent
+    );
+  }
 }
 
 /* ─── Decorative 2D motion ─── */
@@ -313,6 +356,58 @@
   }
 }
 
+/* One-shot product card entrance — a short, staggered rise used only on the
+   first catalogue load (never replayed during filtering or pagination). */
+.animate-card-enter {
+  animation: card-enter 0.5s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+@keyframes card-enter {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Testimonials hero — a slow, non-distracting floating emblem. Decorative CSS
+   3D only; there is no WebGL/3D model on the site. */
+.animate-emblem-float {
+  animation: emblem-float 8s ease-in-out infinite;
+}
+
+@keyframes emblem-float {
+  0%,
+  100% {
+    transform: translate3d(0, -4px, 0) rotate3d(1, 1, 0, 0deg);
+  }
+  50% {
+    transform: translate3d(0, 6px, 0) rotate3d(1, 1, 0, 8deg);
+  }
+}
+
+/* Testimonials gallery — gentle editorial lift on hover (pointer devices only) */
+.gallery-card {
+  transition:
+    transform 0.35s cubic-bezier(0.22, 0.61, 0.36, 1),
+    box-shadow 0.35s ease;
+}
+
+.gallery-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-card-hover);
+}
+
+@media (hover: none) {
+  .gallery-card:hover {
+    transform: none;
+    box-shadow: var(--shadow-card);
+  }
+}
+
 /* Accessible: honour the OS "reduce motion" request for all CSS motion.
    JS-driven (GSAP) motion is already guarded in src/lib/motion. */
 @media (prefers-reduced-motion: reduce) {
@@ -329,6 +424,57 @@
   .animate-car-drive,
   .animate-lane-flow {
     display: none !important;
+  }
+
+  /* Keep the emblem, but stop it drifting */
+  .animate-emblem-float {
+    animation: none !important;
+    transform: none !important;
+  }
+
+  /* About page decorative family: stop all motion, keep the static linework */
+  .about-spin,
+  .about-spin-rev,
+  .about-dash,
+  .about-dash-slow,
+  .about-float,
+  .about-float-rev,
+  .about-drift,
+  .about-grid-flow,
+  .about-sweep,
+  .about-pulse {
+    animation: none !important;
+    transform: none !important;
+  }
+
+  /* Contact page decorative family: same treatment */
+  .contact-spin,
+  .contact-spin-rev,
+  .contact-dash,
+  .contact-dash-slow,
+  .contact-float,
+  .contact-float-rev,
+  .contact-drift,
+  .contact-grid-flow,
+  .contact-sweep,
+  .contact-pulse,
+    .contact-gradient,
+    .contact-route {
+    animation: none !important;
+    transform: none !important;
+  }
+
+  /* Homepage hero decorative family: same treatment */
+  .showroom-spin,
+  .showroom-spin-rev,
+  .showroom-dash,
+  .showroom-dash-slow,
+  .showroom-float,
+  .showroom-drift,
+  .showroom-sweep,
+  .showroom-pulse {
+    animation: none !important;
+    transform: none !important;
   }
 }
 
@@ -353,4 +499,359 @@
     opacity: 0;
     transform: translateY(-6px);
   }
+}
+
+/* ─── About page decorative motion family ───
+   A single coherent set of lightweight 2D SVG/CSS effects. All colours derive
+   from the active theme (never hard-coded), everything is `pointer-events:none`
+   and marked aria-hidden, and the reduced-motion block above neutralises every
+   animation so the page stays static and readable. */
+.about-decor {
+  position: absolute;
+  pointer-events: none;
+  user-select: none;
+}
+
+.about-particle {
+  position: absolute;
+  display: block;
+  border-radius: 9999px;
+  background: var(--theme-primary);
+  opacity: 0.35;
+}
+
+.about-geo {
+  position: absolute;
+  display: block;
+  border: 1px solid color-mix(in srgb, var(--theme-primary) 30%, transparent);
+  border-radius: 6px;
+}
+
+.about-shard {
+  position: relative;
+  display: block;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--theme-primary),
+    transparent
+  );
+  opacity: 0.5;
+}
+
+.about-grid {
+  background-image:
+    linear-gradient(
+      to right,
+      color-mix(in srgb, var(--theme-primary) 16%, transparent) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--theme-primary) 16%, transparent) 1px,
+      transparent 1px
+    );
+  background-size: 48px 48px;
+}
+
+.about-spin {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: about-spin 64s linear infinite;
+}
+
+.about-spin-rev {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: about-spin 82s linear infinite reverse;
+}
+
+@keyframes about-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.about-dash {
+  stroke-dasharray: 6 14;
+  animation: about-dash 22s linear infinite;
+}
+
+.about-dash-slow {
+  stroke-dasharray: 4 22;
+  animation: about-dash 36s linear infinite;
+}
+
+@keyframes about-dash {
+  to {
+    stroke-dashoffset: -420;
+  }
+}
+
+.about-float {
+  animation: about-float 9s ease-in-out infinite;
+}
+
+.about-float-rev {
+  animation: about-float 12s ease-in-out infinite reverse;
+}
+
+@keyframes about-float {
+  0%,
+  100% {
+    transform: translateY(-6px);
+  }
+  50% {
+    transform: translateY(9px);
+  }
+}
+
+.about-drift {
+  animation: about-drift 16s ease-in-out infinite;
+}
+
+@keyframes about-drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+    opacity: 0.3;
+  }
+  50% {
+    transform: translate3d(16px, -24px, 0);
+    opacity: 0.7;
+  }
+}
+
+.about-grid-flow {
+  animation: about-grid 20s linear infinite;
+}
+
+@keyframes about-grid {
+  to {
+    background-position: 48px 48px;
+  }
+}
+
+.about-sweep {
+  opacity: 0;
+  animation: about-sweep 9s ease-in-out infinite;
+}
+
+@keyframes about-sweep {
+  0% {
+    transform: translateX(-130%) skewX(-16deg);
+    opacity: 0;
+  }
+  40% {
+    opacity: 0.55;
+  }
+  100% {
+    transform: translateX(130%) skewX(-16deg);
+    opacity: 0;
+  }
+}
+
+.about-pulse {
+  animation: about-pulse 8s ease-in-out infinite;
+}
+
+@keyframes about-pulse {
+  0%,
+  100% {
+    opacity: 0.16;
+  }
+  50% {
+    opacity: 0.42;
+  }
+}
+
+/* ─── Contact page decorative motion family ───
+   A second coherent set of lightweight 2D effects. It reuses the shared
+   `about-*` keyframes (kept generic) with contact-scoped class names so the
+   Contact page can evolve independently. All colours derive from the theme,
+   everything is `pointer-events:none` + aria-hidden, and the reduced-motion
+   block above neutralises every animation. */
+.contact-decor {
+  position: absolute;
+  pointer-events: none;
+  user-select: none;
+}
+
+.contact-particle {
+  position: absolute;
+  display: block;
+  border-radius: 9999px;
+  background: var(--theme-primary);
+  opacity: 0.3;
+}
+
+.contact-shape {
+  position: absolute;
+  display: block;
+  border: 1px solid color-mix(in srgb, var(--theme-primary) 28%, transparent);
+  border-radius: 0.5rem;
+}
+
+.contact-grid {
+  background-image:
+    linear-gradient(to right, color-mix(in srgb, var(--theme-primary) 15%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in srgb, var(--theme-primary) 15%, transparent) 1px, transparent 1px);
+  background-size: 44px 44px;
+}
+
+.contact-spin {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: about-spin 72s linear infinite;
+}
+
+.contact-spin-rev {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: about-spin 90s linear infinite reverse;
+}
+
+.contact-dash {
+  stroke-dasharray: 6 16;
+  animation: about-dash 26s linear infinite;
+}
+
+.contact-dash-slow {
+  stroke-dasharray: 3 18;
+  animation: about-dash 42s linear infinite;
+}
+
+.contact-route {
+  stroke-dasharray: 10 14;
+  animation: about-dash 32s linear infinite;
+}
+
+.contact-float {
+  animation: about-float 10s ease-in-out infinite;
+}
+
+.contact-float-rev {
+  animation: about-float 13s ease-in-out infinite reverse;
+}
+
+.contact-drift {
+  animation: about-drift 17s ease-in-out infinite;
+}
+
+.contact-grid-flow {
+  animation: about-grid 22s linear infinite;
+}
+
+.contact-sweep {
+  opacity: 0;
+  animation: about-sweep 10s ease-in-out infinite;
+}
+
+.contact-pulse {
+  animation: contact-soft-pulse 9s ease-in-out infinite;
+}
+
+@keyframes contact-soft-pulse {
+  0%,
+  100% {
+    opacity: 0.14;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+.contact-gradient {
+  background-image:
+    radial-gradient(40% 40% at 20% 25%, color-mix(in srgb, var(--theme-primary) 16%, transparent), transparent 70%),
+    radial-gradient(45% 45% at 82% 72%, color-mix(in srgb, var(--theme-primary) 12%, transparent), transparent 72%);
+  background-size: 180% 180%;
+  animation: contact-gradient-move 24s ease-in-out infinite;
+}
+
+@keyframes contact-gradient-move {
+  0%,
+  100% {
+    background-position: 0% 0%;
+  }
+  50% {
+    background-position: 100% 100%;
+  }
+}
+
+/* Fine-line background pattern */
+.contact-lines {
+  background-image: repeating-linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--theme-primary) 18%, transparent) 0 1px,
+    transparent 1px 44px
+  );
+}
+
+/* ─── Homepage hero decorative motion family ───
+   Third sibling of the `about-*` / `contact-*` families for the showroom hero.
+   Reuses the shared generic keyframes, derives every colour from the theme,
+   stays `pointer-events:none` + aria-hidden, and is neutralised by the
+   reduced-motion block above. */
+.showroom-decor {
+  position: absolute;
+  pointer-events: none;
+  user-select: none;
+}
+
+.showroom-particle {
+  position: absolute;
+  display: block;
+  border-radius: 9999px;
+  background: var(--theme-primary);
+  opacity: 0.32;
+}
+
+.showroom-spin {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: about-spin 80s linear infinite;
+}
+
+.showroom-spin-rev {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: about-spin 110s linear infinite reverse;
+}
+
+.showroom-dash {
+  stroke-dasharray: 7 20;
+  animation: about-dash 30s linear infinite;
+}
+
+.showroom-dash-slow {
+  stroke-dasharray: 3 22;
+  animation: about-dash 48s linear infinite;
+}
+
+.showroom-float {
+  animation: about-float 11s ease-in-out infinite;
+}
+
+.showroom-drift {
+  animation: about-drift 18s ease-in-out infinite;
+}
+
+.showroom-sweep {
+  opacity: 0;
+  animation: about-sweep 9s ease-in-out infinite;
+}
+
+.showroom-pulse {
+  animation: about-pulse 8s ease-in-out infinite;
+}
+
+/* Fine-line background pattern */
+.showroom-lines {
+  background-image: repeating-linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--theme-primary) 16%, transparent) 0 1px,
+    transparent 1px 38px
+  );
 }

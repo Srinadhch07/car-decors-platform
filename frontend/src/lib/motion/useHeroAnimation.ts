@@ -83,6 +83,7 @@ export function useHeroAnimation<T extends HTMLElement = HTMLElement>() {
     }
 
     const content = scope.querySelector<HTMLElement>("[data-hero-content]");
+    const decor = scope.querySelector<HTMLElement>("[data-hero-decor]");
     if (content && bg) {
       const factor = isMobileViewport() ? 0.4 : 1;
       gsap.to(bg, {
@@ -109,9 +110,25 @@ export function useHeroAnimation<T extends HTMLElement = HTMLElement>() {
       });
     }
 
+    // Optional mid-ground decor layer drifts a little faster than the backdrop
+    // to reinforce depth (no-op on heroes that don't render one).
+    if (decor) {
+      const factor = isMobileViewport() ? 0.4 : 1;
+      gsap.to(decor, {
+        yPercent: -14 * factor,
+        ease: "none",
+        scrollTrigger: {
+          trigger: scope,
+          start: "top top",
+          end: "bottom top",
+          scrub: true,
+        },
+      });
+    }
+
     return () => {
       tween.kill();
-      gsap.killTweensOf([bg, content]);
+      gsap.killTweensOf([bg, content, decor]);
     };
   }, [reduced]);
 

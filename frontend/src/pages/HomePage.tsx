@@ -10,13 +10,15 @@ import {
   type SeoData,
 } from "../lib/seo";
 import {
-  HeroSection,
+  ShowroomHero,
   ValuePropositions,
   CategorySection,
   FeaturedProducts,
-  FeaturedTestimonials,
+  HomeAboutSection,
+  ShowcaseSection,
   WhyChooseSection,
-  ContactCTA,
+  FeaturedTestimonials,
+  VisitUsSection,
 } from "../features/home";
 
 export function HomePage() {
@@ -60,13 +62,15 @@ export function HomePage() {
   return (
     <div>
       <SeoHead data={seo} />
-      <HeroSection />
+      <ShowroomHero />
       <ValuePropositions />
       <CategorySection />
       <FeaturedProducts />
-      <FeaturedTestimonials />
+      <HomeAboutSection />
+      <ShowcaseSection />
       <WhyChooseSection />
-      <ContactCTA />
+      <FeaturedTestimonials />
+      <VisitUsSection />
     </div>
   );
 }

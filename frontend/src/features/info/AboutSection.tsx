@@ -26,7 +26,7 @@ const features = [
 
 export function AboutSection() {
   const { data: shop } = useShopSettings();
-  const name = shop?.shop_name ?? "SLG Car Decors";
+  const name = shop?.shop_name ?? "Venkata Ramana Real Value Car Decors";
 
   return (
     <div className="space-y-12">

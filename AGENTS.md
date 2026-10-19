@@ -1,4 +1,4 @@
-# AGENTS.md — Guide for AI coding agents
+﻿# AGENTS.md — Guide for AI coding agents
 
 Car Decor Platform: a public storefront (React SPA) plus a private admin console,
 backed by a FastAPI + MongoDB API. See `README.md` for business/technical overview
@@ -11,7 +11,7 @@ and `docs/PROJECT_CONTEXT.md` for the deeper map.
 
 ## Layout
 - `backend/` FastAPI app (`backend/app/main.py`), tests in `backend/tests/`.
-  `api/routes/` → `services/` → `repositories/` → MongoDB; models in `models/`,
+  `api/routes/` -> `services/` -> `repositories/` -> MongoDB; models in `models/`,
   config in `core/config.py`, indexes in `db/indexes.py`.
 - `frontend/` React + Vite SPA. `src/features/*` (feature modules),
   `src/components/*`, `src/pages/*`, `src/app/router/index.tsx`, shared API
@@ -40,3 +40,28 @@ and `docs/PROJECT_CONTEXT.md` for the deeper map.
 - Add/adjust tests with every change. Run the relevant tests + lint/typecheck and report
   the exact results, including any pre-existing failures (there is 1 known frontend failure).
 - Do not claim a suite passes when it does not. Do not commit unless explicitly asked.
+
+## Brand & canonical domain
+- Business name: **Venkata Ramana Real Value Car Decors** (not "SLG" or previous names).
+- Intended canonical origin: **https://vrcardecors.in/** -- used in SEO, sitemap, robots.txt,
+  Open Graph, Twitter, structured data, favicon declarations. **Domain is not live/verified.**
+- Reuse shop settings (`shop_name`, contact info, social links) as the single source of truth.
+- Do not hardcode the brand name in new components; read from `useShopSettings()` or `FALLBACK_BRAND`.
+
+## Favicon
+- Animated: `frontend/public/favicon.svg` (SMIL animation, prefers-reduced-motion respected).
+- Static fallback: `frontend/public/favicon-static.svg`.
+- Both declared in `frontend/index.html`; no ICO/PNG required for modern browsers.
+
+## SEO / structured data
+- `frontend/src/lib/seo.ts` exports `SITE_URL`, `FALLBACK_BRAND`, `applySeo()`, `buildBreadcrumbs()`.
+- Every public page renders `<SeoHead data={...} />` with unique `title`, `description`,
+  `canonicalPath`, `ogImage`, `siteName`, and `jsonLd` (WebSite, Product, BreadcrumbList).
+- Admin/auth/404 pages call `blockIndexing()` (noindex, nofollow, clears OG/Twitter/JSON-LD).
+- Sitemap at `/sitemap.xml` (served by backend `seo.py`); uses `frontend_url` setting.
+- Robots.txt at `/robots.txt` (static file in `frontend/public/`); references sitemap.
+
+## Verification checklist
+Before reporting success, run from `frontend/`: `npx tsc -b`, `npm run lint`, `npm run test`,
+`npm run build`. From `backend/`: `ruff check app tests`, `pytest tests -q`.
+Report exact counts; note the 1 pre-existing frontend failure separately.

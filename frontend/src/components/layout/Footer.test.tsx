@@ -78,6 +78,35 @@ describe("Footer", () => {
     expect(screen.queryByText("Follow Us")).not.toBeInTheDocument();
   });
 
+  it("renders every configured social network including telegram and website", () => {
+    render(<Footer />, {
+      wrapper: ({ children }) => (
+        <TestWrapper
+          shopState={createMockState({
+            data: {
+              ...mockShopSettings,
+              social_links: {
+                instagram: "https://instagram.com/vrcardecors",
+                telegram: "https://t.me/vrcardecors",
+                website: "https://example.com",
+              },
+            },
+          })}
+        >
+          {children}
+        </TestWrapper>
+      ),
+    });
+    expect(screen.getByRole("link", { name: /telegram/i })).toHaveAttribute(
+      "href",
+      "https://t.me/vrcardecors",
+    );
+    expect(screen.getByRole("link", { name: /website/i })).toHaveAttribute(
+      "href",
+      "https://example.com",
+    );
+  });
+
   it("hides contact section when all contact fields are empty", () => {
     render(<Footer />, {
       wrapper: ({ children }) => (

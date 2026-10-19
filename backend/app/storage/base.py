@@ -28,6 +28,18 @@ class TooLargeImageError(ImageValidationError):
     """The image exceeds the configured maximum size."""
 
 
+class MediaValidationError(Exception):
+    """Raised when an uploaded media file is rejected before any upload happens."""
+
+
+class UnsupportedMediaError(MediaValidationError):
+    """The media content type / extension / signature is not allowed."""
+
+
+class TooLargeMediaError(MediaValidationError):
+    """The media exceeds the configured maximum size for its kind."""
+
+
 class Storage(ABC):
     """Minimal image storage contract used by the product service."""
 
@@ -73,6 +85,7 @@ def build_storage(settings: Settings) -> Storage:
 
 
 _IMAGE_PREFIX = "products/"
+_GALLERY_PREFIX = "gallery/"
 
 
 def is_product_key(key: str | None) -> bool:
@@ -80,4 +93,10 @@ def is_product_key(key: str | None) -> bool:
     return bool(key and key.startswith(_IMAGE_PREFIX) and len(key) > len(_IMAGE_PREFIX))
 
 
+def is_gallery_key(key: str | None) -> bool:
+    """True when ``key`` looks like a Work Gallery media key."""
+    return bool(key and key.startswith(_GALLERY_PREFIX) and len(key) > len(_GALLERY_PREFIX))
+
+
 PRODUCT_KEY_PREFIX = _IMAGE_PREFIX
+GALLERY_KEY_PREFIX = _GALLERY_PREFIX

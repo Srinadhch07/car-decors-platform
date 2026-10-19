@@ -36,7 +36,7 @@ _MAX_URLS = 50_000
 def _storefront_base_url() -> str:
     """Return the storefront origin used as the sitemap host."""
     url = get_settings().frontend_url.strip().rstrip("/")
-    return url or "https://car-decors.duckdns.org"
+    return url or "https://vrcardecors.in"
 
 
 def _escape(value: str) -> str:

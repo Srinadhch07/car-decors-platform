@@ -3,9 +3,24 @@ import { api } from "../../lib/api/client";
 import type { TestimonialListPage } from "../../types/api";
 import { EmptyState, ErrorState } from "../../components/ui";
 import { Pagination } from "../products/Pagination";
-import { TestimonialCard } from "./TestimonialCard";
+import { useScrollReveal } from "../../lib/motion";
+import { TestimonialGalleryCard } from "./TestimonialGalleryCard";
 
 const PAGE_SIZE = 6;
+
+function GallerySkeleton() {
+  return (
+    <div className="columns-1 gap-5 sm:columns-2 lg:columns-3" aria-hidden="true">
+      {[0, 1, 2, 3, 4, 5].map((key) => (
+        <div
+          key={key}
+          className="mb-5 break-inside-avoid animate-pulse rounded-2xl bg-surface-muted"
+          style={{ height: `${11 + (key % 3) * 3}rem` }}
+        />
+      ))}
+    </div>
+  );
+}
 
 export function TestimonialsList() {
   const [page, setPage] = useState(1);
@@ -13,6 +28,11 @@ export function TestimonialsList() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const scopeRef = useScrollReveal<HTMLDivElement>("[data-reveal]", {
+    y: 28,
+    stagger: 0.07,
+    start: "top 90%",
+  });
 
   useEffect(() => {
     let cancelled = false;
@@ -42,7 +62,7 @@ export function TestimonialsList() {
   }, []);
 
   if (loading) {
-    return <p className="py-12 text-center text-text-muted">Loading testimonials...</p>;
+    return <GallerySkeleton />;
   }
 
   if (error) {
@@ -59,10 +79,12 @@ export function TestimonialsList() {
   }
 
   return (
-    <div>
-      <div className="grid gap-5 sm:grid-cols-2">
+    <div ref={scopeRef}>
+      <div className="columns-1 gap-5 sm:columns-2 lg:columns-3">
         {data.items.map((testimonial) => (
-          <TestimonialCard key={testimonial.id} testimonial={testimonial} />
+          <div key={testimonial.id} data-reveal className="break-inside-avoid">
+            <TestimonialGalleryCard testimonial={testimonial} />
+          </div>
         ))}
       </div>
       {data.total_pages > 1 && (

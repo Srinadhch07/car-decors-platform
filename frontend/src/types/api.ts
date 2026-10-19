@@ -303,6 +303,108 @@ export interface TestimonialUpdatePayload {
   moderation_note?: string | null;
 }
 
+// ─── Work Gallery ───
+
+export type GalleryMediaType = "image" | "video";
+
+/** Sort keys accepted by the gallery endpoints. */
+export type GallerySort = "order" | "newest" | "oldest";
+
+/** A gallery item as exposed on the public site (published only). */
+export interface GalleryItem {
+  id: string;
+  title: string;
+  description: string;
+  category: string | null;
+  media_type: GalleryMediaType;
+  url: string;
+  mime_type: string;
+  width: number | null;
+  height: number | null;
+  duration_seconds: number | null;
+  created_at: string;
+}
+
+/** A gallery item as returned by the admin endpoints, with visibility flags. */
+export interface AdminGalleryItem extends GalleryItem {
+  storage_key: string;
+  size_bytes: number;
+  is_published: boolean;
+  is_featured: boolean;
+  display_order: number;
+  updated_at: string;
+}
+
+export interface GalleryListPage {
+  items: GalleryItem[];
+  page: number;
+  page_size: number;
+  total: number;
+  total_pages: number;
+}
+
+export interface AdminGalleryListPage {
+  items: AdminGalleryItem[];
+  page: number;
+  page_size: number;
+  total: number;
+  total_pages: number;
+}
+
+export interface GalleryQueryParams {
+  media_type?: GalleryMediaType;
+  category?: string;
+  sort?: GallerySort;
+  page?: number;
+  page_size?: number;
+}
+
+export interface GalleryAdminQueryParams {
+  search?: string;
+  media_type?: GalleryMediaType;
+  category?: string;
+  is_published?: boolean;
+  is_featured?: boolean;
+  sort?: GallerySort;
+  page?: number;
+  page_size?: number;
+}
+
+/** Optional metadata for a create upload (media is validated server-side). */
+export interface GalleryCreatePayload {
+  title?: string;
+  description?: string;
+  category?: string | null;
+  display_order?: number | null;
+}
+
+/** Metadata edits for an existing item; `clear_fields` nulls optional fields. */
+export interface GalleryUpdatePayload {
+  title?: string;
+  description?: string;
+  category?: string | null;
+  display_order?: number | null;
+  /** Field names to clear (e.g. ["category"]). */
+  clear_fields?: string[];
+}
+
+/** Shared metadata applied to every file in a batch upload. */
+export interface GalleryBatchPayload {
+  category?: string | null;
+  description?: string;
+}
+
+/** A single file in a batch upload that the server rejected. */
+export interface GalleryBatchFailure {
+  filename: string;
+  detail: string;
+}
+
+export interface GalleryBatchResult {
+  items: AdminGalleryItem[];
+  failures: GalleryBatchFailure[];
+}
+
 // ─── API error ───
 
 export interface ApiError {

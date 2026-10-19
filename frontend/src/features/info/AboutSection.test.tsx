@@ -8,7 +8,7 @@ describe("AboutSection", () => {
     render(<AboutSection />, {
       wrapper: ({ children }) => <TestWrapper>{children}</TestWrapper>,
     });
-    expect(screen.getByRole("heading", { name: /SLG Car Decors/ })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /Venkata Ramana Real Value Car Decors/ })).toBeInTheDocument();
   });
 
   it("renders feature cards", () => {

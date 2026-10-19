@@ -3,7 +3,23 @@
 from app.models.admin_user import AdminUser, AdminUserRead
 from app.models.base import SLUG_PATTERN, BaseDocument, Money, PyObjectId, utc_now
 from app.models.category import Category, CategoryCreate, CategoryRead, CategoryUpdate
-from app.models.enums import Availability, TestimonialStatus
+from app.models.enums import Availability, GalleryMediaType, TestimonialStatus
+from app.models.gallery import (
+    GalleryAdminListPage,
+    GalleryAdminRead,
+    GalleryBatchFailure,
+    GalleryBatchResult,
+    GalleryCreate,
+    GalleryFeaturedRequest,
+    GalleryItem,
+    GalleryListPage,
+    GalleryOrderRequest,
+    GalleryPublicationRequest,
+    GalleryRead,
+    GalleryUpdate,
+    build_gallery_create,
+    build_gallery_update,
+)
 from app.models.product import (
     AdminProductListPage,
     AdminProductRead,
@@ -80,5 +96,20 @@ __all__ = [
     "TestimonialUpdate",
     "build_product_create",
     "build_product_update",
+    "GalleryAdminListPage",
+    "GalleryAdminRead",
+    "GalleryBatchFailure",
+    "GalleryBatchResult",
+    "GalleryCreate",
+    "GalleryFeaturedRequest",
+    "GalleryItem",
+    "GalleryListPage",
+    "GalleryMediaType",
+    "GalleryOrderRequest",
+    "GalleryPublicationRequest",
+    "GalleryRead",
+    "GalleryUpdate",
+    "build_gallery_create",
+    "build_gallery_update",
     "utc_now",
 ]

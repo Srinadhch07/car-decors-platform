@@ -56,11 +56,11 @@ describe("ForgotPasswordPage", () => {
     renderForgot();
     await screen.findByRole("heading", { level: 1, name: /forgot password/i });
 
-    await user.type(screen.getByLabelText("Email"), "admin@slg.com");
+    await user.type(screen.getByLabelText("Email"), "admin@vrcardecors.in");
     await user.click(screen.getByRole("button", { name: "Send reset link" }));
 
     expect(await screen.findByRole("status")).toHaveTextContent(GENERIC_MESSAGE);
-    expect(forgotBody).toEqual({ email: "admin@slg.com" });
+    expect(forgotBody).toEqual({ email: "admin@vrcardecors.in" });
   });
 
   it("shows a rate-limit hint on 429", async () => {
@@ -73,7 +73,7 @@ describe("ForgotPasswordPage", () => {
     renderForgot();
     await screen.findByRole("heading", { level: 1, name: /forgot password/i });
 
-    await user.type(screen.getByLabelText("Email"), "admin@slg.com");
+    await user.type(screen.getByLabelText("Email"), "admin@vrcardecors.in");
     await user.click(screen.getByRole("button", { name: "Send reset link" }));
 
     const alert = await screen.findByRole("alert");

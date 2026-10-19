@@ -9,10 +9,10 @@
  */
 
 /** Production storefront origin (also used as the sitemap host). */
-export const SITE_URL = "https://car-decors.duckdns.org";
+export const SITE_URL = "https://vrcardecors.in";
 
 /** Fallback brand used until the shop settings provide the real one. */
-export const FALLBACK_BRAND = "SLG Car Decors";
+export const FALLBACK_BRAND = "Venkata Ramana Real Value Car Decors";
 
 /** Default social-share image used when a page has no product/category image. */
 export const DEFAULT_OG_IMAGE = "/images/og-default.png";

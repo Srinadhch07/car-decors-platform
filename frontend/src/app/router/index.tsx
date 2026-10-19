@@ -7,6 +7,7 @@ import {
   AboutPage,
   CategoryPage,
   ContactPage,
+  GalleryPage,
   HomePage,
   NotFoundPage,
   ProductDetailPage,
@@ -19,6 +20,7 @@ import { ProductFormPage } from "../../pages/admin/products/ProductFormPage";
 import { ProductsAdminPage } from "../../pages/admin/products/ProductsAdminPage";
 import { ShopSettingsAdminPage } from "../../pages/admin/shop/ShopSettingsAdminPage";
 import { SubcategoriesAdminPage } from "../../pages/admin/subcategories/SubcategoriesAdminPage";
+import { GalleryAdminPage } from "../../pages/admin/gallery/GalleryAdminPage";
 import { TestimonialsAdminPage } from "../../pages/admin/testimonials/TestimonialsAdminPage";
 import { AccountSettings } from "../../features/admin/account";
 import { LoginPage } from "../../pages/admin/auth/LoginPage";
@@ -66,6 +68,10 @@ export const router = createBrowserRouter([
     element: withLayout(TestimonialsPage)(),
   },
   {
+    path: "/gallery",
+    element: withLayout(GalleryPage)(),
+  },
+  {
     path: "/admin/login",
     element: (
       <AdminAuthProvider>
@@ -104,6 +110,7 @@ export const router = createBrowserRouter([
       { path: "categories", element: <CategoriesAdminPage /> },
       { path: "subcategories", element: <SubcategoriesAdminPage /> },
       { path: "testimonials", element: <TestimonialsAdminPage /> },
+      { path: "gallery", element: <GalleryAdminPage /> },
       { path: "shop", element: <ShopSettingsAdminPage /> },
       { path: "account", element: <AccountSettings /> },
       { path: "*", element: <Navigate to="/admin" replace /> },

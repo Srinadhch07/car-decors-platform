@@ -1,4 +1,6 @@
 import type {
+  AdminGalleryItem,
+  AdminGalleryListPage,
   AdminProduct,
   AdminTestimonial,
   AdminTestimonialListPage,
@@ -9,6 +11,14 @@ import type {
   ChangeEmailPayload,
   ChangePasswordPayload,
   ForgotPasswordResponse,
+  GalleryAdminQueryParams,
+  GalleryBatchPayload,
+  GalleryBatchResult,
+  GalleryCreatePayload,
+  GalleryItem,
+  GalleryListPage,
+  GalleryQueryParams,
+  GalleryUpdatePayload,
   Product,
   ProductListPage,
   ProductQueryParams,
@@ -365,6 +375,111 @@ export class ApiClient {
     });
   }
 
+  // ─── Gallery (public) ───
+
+  /** Published gallery items only, with media-type/category filters. */
+  async getGallery(params: GalleryQueryParams = {}): Promise<GalleryListPage> {
+    const query = this.buildQueryString(params as Record<string, string | number>);
+    return this.request<GalleryListPage>(`/api/gallery${query}`);
+  }
+
+  /** Published, featured gallery items for marketing surfaces (homepage). */
+  async getFeaturedGallery(
+    params: { page?: number; page_size?: number } = {},
+  ): Promise<GalleryListPage> {
+    const query = this.buildQueryString(params);
+    return this.request<GalleryListPage>(`/api/gallery/featured${query}`);
+  }
+
+  /** Public detail; unpublished items are not reachable (404). */
+  async getGalleryItem(id: string): Promise<GalleryItem> {
+    return this.request<GalleryItem>(`/api/gallery/${encodeURIComponent(id)}`);
+  }
+
+  // ─── Admin: Gallery ───
+
+  async adminListGallery(query: GalleryAdminQueryParams = {}): Promise<AdminGalleryListPage> {
+    const qs = this.buildQueryString(
+      query as Record<string, string | number | boolean | undefined>,
+    );
+    return this.request<AdminGalleryListPage>(`/api/admin/gallery${qs}`);
+  }
+
+  async adminGetGalleryItem(id: string): Promise<AdminGalleryItem> {
+    return this.request<AdminGalleryItem>(`/api/admin/gallery/${encodeURIComponent(id)}`);
+  }
+
+  /** Create one item from a single file; `title` defaults to the filename stem. */
+  async adminCreateGallery(
+    payload: GalleryCreatePayload,
+    file: File,
+  ): Promise<AdminGalleryItem> {
+    return this.request<AdminGalleryItem>(
+      "/api/admin/gallery",
+      { method: "POST", body: this.galleryFormData(payload, file) },
+    );
+  }
+
+  /** Upload up to the configured maximum of files in one batch request. */
+  async adminCreateGalleryBatch(
+    files: File[],
+    payload: GalleryBatchPayload = {},
+  ): Promise<GalleryBatchResult> {
+    const form = new FormData();
+    for (const file of files) {
+      form.append("files", file, file.name);
+    }
+    if (payload.category !== undefined && payload.category !== null) {
+      form.append("category", payload.category);
+    }
+    if (payload.description) {
+      form.append("description", payload.description);
+    }
+    return this.request<GalleryBatchResult>("/api/admin/gallery/batch", {
+      method: "POST",
+      body: form,
+    });
+  }
+
+  /** Update metadata and optionally replace the stored media. */
+  async adminUpdateGallery(
+    id: string,
+    payload: GalleryUpdatePayload,
+    file?: File | null,
+  ): Promise<AdminGalleryItem> {
+    return this.request<AdminGalleryItem>(
+      `/api/admin/gallery/${encodeURIComponent(id)}`,
+      { method: "PUT", body: this.galleryFormData(payload, file) },
+    );
+  }
+
+  async adminSetGalleryPublication(id: string, is_published: boolean): Promise<AdminGalleryItem> {
+    return this.request<AdminGalleryItem>(
+      `/api/admin/gallery/${encodeURIComponent(id)}/publication`,
+      this.jsonInit("PATCH", { is_published }),
+    );
+  }
+
+  async adminSetGalleryFeatured(id: string, is_featured: boolean): Promise<AdminGalleryItem> {
+    return this.request<AdminGalleryItem>(
+      `/api/admin/gallery/${encodeURIComponent(id)}/feature`,
+      this.jsonInit("PATCH", { is_featured }),
+    );
+  }
+
+  async adminSetGalleryOrder(id: string, display_order: number): Promise<AdminGalleryItem> {
+    return this.request<AdminGalleryItem>(
+      `/api/admin/gallery/${encodeURIComponent(id)}/order`,
+      this.jsonInit("PATCH", { display_order }),
+    );
+  }
+
+  async adminDeleteGallery(id: string): Promise<void> {
+    await this.request<void>(`/api/admin/gallery/${encodeURIComponent(id)}`, {
+      method: "DELETE",
+    });
+  }
+
   // ─── Request builders ───
 
   private jsonInit(method: string, body?: unknown): RequestInit {
@@ -373,6 +488,32 @@ export class ApiClient {
       headers: { "Content-Type": "application/json" },
       body: body === undefined ? undefined : JSON.stringify(body),
     };
+  }
+
+  /** Build the multipart body shared by gallery create/update. */
+  private galleryFormData(
+    payload: GalleryCreatePayload | GalleryUpdatePayload,
+    file?: File | null,
+  ): FormData {
+    const form = new FormData();
+    if (file) {
+      form.append("file", file, file.name);
+    }
+    for (const field of ["title", "description", "category"] as const) {
+      const value = payload[field];
+      if (value !== undefined && value !== null) {
+        form.append(field, String(value));
+      }
+    }
+    const order = payload.display_order;
+    if (order !== undefined && order !== null) {
+      form.append("display_order", String(order));
+    }
+    const clearFields = "clear_fields" in payload ? payload.clear_fields : undefined;
+    if (Array.isArray(clearFields) && clearFields.length > 0) {
+      form.append("clear_fields", clearFields.join(","));
+    }
+    return form;
   }
 
   private multipartInit(

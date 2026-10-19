@@ -8,6 +8,7 @@ import { ContactPage } from "./ContactPage";
 
 const server = setupServer(
   http.get("*/api/shop", () => HttpResponse.json(mockShopSettings)),
+  http.get("*/api/categories", () => HttpResponse.json([])),
 );
 
 beforeAll(() => server.listen());
@@ -21,8 +22,11 @@ describe("AboutPage", () => {
         <TestWrapper initialEntries={["/about"]}>{children}</TestWrapper>
       ),
     });
-    expect(screen.getByRole("heading", { name: /about slg car decors/i })).toBeInTheDocument();
-    expect(screen.getByText("Quality Products")).toBeInTheDocument();
+    const heading = screen.getByRole("heading", { level: 1 });
+    expect(heading).toHaveTextContent(/17 Years of/);
+    expect(
+      screen.getByRole("heading", { name: /Visit Us in Karimnagar/i }),
+    ).toBeInTheDocument();
   });
 
   it("links to products browse CTA", () => {
@@ -31,10 +35,9 @@ describe("AboutPage", () => {
         <TestWrapper initialEntries={["/about"]}>{children}</TestWrapper>
       ),
     });
-    expect(screen.getByRole("link", { name: /browse our products/i })).toHaveAttribute(
-      "href",
-      "/products",
-    );
+    expect(
+      screen.getAllByRole("link", { name: /explore products/i })[0],
+    ).toHaveAttribute("href", "/products");
   });
 
   it("sets SEO title with shop name", () => {
@@ -48,14 +51,15 @@ describe("AboutPage", () => {
 });
 
 describe("ContactPage", () => {
-  it("renders Contact content", () => {
+  it("renders the Contact hero heading", () => {
     render(<ContactPage />, {
       wrapper: ({ children }) => (
         <TestWrapper initialEntries={["/contact"]}>{children}</TestWrapper>
       ),
     });
-    expect(screen.getByRole("heading", { name: "Contact Us" })).toBeInTheDocument();
-    expect(screen.getByText("Get in Touch")).toBeInTheDocument();
+    const heading = screen.getByRole("heading", { level: 1 });
+    expect(heading).toHaveTextContent(/Let's Talk About/);
+    expect(heading).toHaveTextContent(/Your Next Drive\./);
   });
 
   it("renders shop name from settings", () => {
@@ -77,17 +81,22 @@ describe("ContactPage", () => {
     expect(phone).toHaveAttribute("href", `tel:${mockShopSettings.phone}`);
   });
 
-  it("renders WhatsApp link with configured number", () => {
+  it("renders WhatsApp links with the configured number", () => {
     render(<ContactPage />, {
       wrapper: ({ children }) => (
         <TestWrapper initialEntries={["/contact"]}>{children}</TestWrapper>
       ),
     });
-    const whatsapp = screen.getByRole("link", { name: /start chat/i });
-    expect(whatsapp.getAttribute("href")).toContain("wa.me/");
-    expect(whatsapp.getAttribute("href")).toContain(
-      mockShopSettings.whatsapp_number.replace(/[^0-9+]/g, ""),
-    );
+    const whatsappLinks = screen.getAllByRole("link", { name: /whatsapp/i });
+    expect(
+      whatsappLinks.some(
+        (link) =>
+          link.getAttribute("href")?.includes("wa.me/") &&
+          link
+            .getAttribute("href")
+            ?.includes(mockShopSettings.whatsapp_number.replace(/[^0-9+]/g, "")),
+      ),
+    ).toBe(true);
   });
 
   it("renders email mailto: link", () => {
@@ -106,8 +115,25 @@ describe("ContactPage", () => {
         <TestWrapper initialEntries={["/contact"]}>{children}</TestWrapper>
       ),
     });
-    expect(screen.getByText(mockShopSettings.address)).toBeInTheDocument();
+    expect(screen.getAllByText(mockShopSettings.address).length).toBeGreaterThan(0);
     expect(screen.getByText(mockShopSettings.business_hours!)).toBeInTheDocument();
+  });
+
+  it("renders the enquiry composer and store section", () => {
+    render(<ContactPage />, {
+      wrapper: ({ children }) => (
+        <TestWrapper initialEntries={["/contact"]}>{children}</TestWrapper>
+      ),
+    });
+    expect(
+      screen.getByRole("heading", { name: /Visit Us in Karimnagar/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /send on whatsapp/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /Your Next Upgrade Starts Here\./i }),
+    ).toBeInTheDocument();
   });
 
   it("sets SEO title with shop name", () => {

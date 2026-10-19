@@ -9,7 +9,7 @@ import type { AdminUser } from "../../../types/api";
 import { AdminAuthProvider } from "../../../features/admin/auth";
 import { AccountSettings } from "../../../features/admin/account";
 
-const adminUser: AdminUser = { id: "admin-1", email: "admin@slg.com" };
+const adminUser: AdminUser = { id: "admin-1", email: "admin@vrcardecors.in" };
 
 let changeEmailBody: { new_email: string; current_password: string } | null = null;
 let changePasswordBody: {
@@ -92,14 +92,14 @@ describe("AccountSettings", () => {
     await screen.findByRole("heading", { level: 1, name: /account settings/i });
     const form = within(screen.getByRole("form", { name: "Change email form" }));
 
-    await user.type(form.getByLabelText("New email"), "boss@slg.com");
+    await user.type(form.getByLabelText("New email"), "boss@vrcardecors.in");
     await user.type(form.getByLabelText("Current password"), "correct-horse-battery");
     await user.click(form.getByRole("button", { name: "Change email" }));
 
     expect(await screen.findByText(/login page placeholder/i)).toBeInTheDocument();
     expect(screen.getByText(/email updated/i)).toBeInTheDocument();
     expect(changeEmailBody).toEqual({
-      new_email: "boss@slg.com",
+      new_email: "boss@vrcardecors.in",
       current_password: "correct-horse-battery",
     });
     expect(logoutCalled).toBe(true);
@@ -116,7 +116,7 @@ describe("AccountSettings", () => {
     await screen.findByRole("heading", { level: 1, name: /account settings/i });
     const form = within(screen.getByRole("form", { name: "Change email form" }));
 
-    await user.type(form.getByLabelText("New email"), "taken@slg.com");
+    await user.type(form.getByLabelText("New email"), "taken@vrcardecors.in");
     await user.type(form.getByLabelText("Current password"), "correct-horse-battery");
     await user.click(form.getByRole("button", { name: "Change email" }));
 
